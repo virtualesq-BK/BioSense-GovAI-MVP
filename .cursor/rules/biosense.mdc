@@ -1,0 +1,54 @@
+---
+description: BioSense-GovAI monorepo conventions for Cursor agents
+globs:
+  - apps/**
+  - packages/**
+  - infra/**
+  - docs/**
+---
+
+# BioSense-GovAI
+
+AI-powered biomarker–biosensor co-design SaaS. Monorepo optimized for solo-founder velocity.
+
+## Stack (do not substitute without explicit request)
+
+- Frontend: `apps/web` — Next.js 15, TypeScript, Tailwind, shadcn/ui, Clerk
+- Backend: `apps/api` — FastAPI, Python 3.12, clean architecture
+- Contract: `packages/openapi/openapi.yaml` — implement API changes here first
+- Storage: PostgreSQL + pgvector (relational + RAG), Neo4j (knowledge graph)
+- AI: OpenAI only (embeddings + structured completions)
+
+## Architecture rules
+
+1. `apps/web` and `apps/api` never import from each other
+2. Backend layers: `api` → `application/use_cases` → `domain` ← `infrastructure`
+3. Domain layer must not import FastAPI, SQLAlchemy, or Neo4j
+4. One user action = one file in `application/use_cases/`
+5. HTTP handlers in `api/v1/` stay thin — delegate to use cases
+
+## Cost constraints
+
+- No Redis, Kafka, Celery, or separate vector DB for MVP
+- Use pgvector in Postgres for RAG embeddings
+- Use FastAPI BackgroundTasks for async work
+- Prefer Railway + Vercel + Clerk free tiers
+
+## When adding features
+
+1. Update `packages/openapi/openapi.yaml`
+2. Add SQL migration in `infra/db/migrations/postgres/` if schema changes
+3. Implement use case + infrastructure adapter
+4. Add route in `api/v1/`
+5. Add UI in `apps/web/src/components/features/<feature>/`
+
+## Code style
+
+- TypeScript: strict mode, Server Components by default
+- Python: type hints, Pydantic v2, async where I/O bound
+- No placeholder files — every file must contain real implementation
+
+## Key docs
+
+- `docs/SYSTEM_ARCHITECTURE.md` — diagrams, API list, deployment
+- `docs/ROADMAP.md` — implementation phases

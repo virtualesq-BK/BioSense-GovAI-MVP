@@ -1,0 +1,29 @@
+[
+  {
+    "region_code": "KR-11",
+    "region_name_ko": "서울특별시",
+    "cancer_type": "lung",
+    "incidence_rate": 42.5,
+    "mortality_rate": 28.3,
+    "data_year": 2023,
+    "source": "KOSIS (seed)"
+  },
+  {
+    "region_code": "KR-11",
+    "region_name_ko": "서울특별시",
+    "cancer_type": "colorectal",
+    "incidence_rate": 38.2,
+    "mortality_rate": 12.1,
+    "data_year": 2023,
+    "source": "KOSIS (seed)"
+  },
+  {
+    "region_code": "KR-26",
+    "region_name_ko": "부산광역시",
+    "cancer_type": "stomach",
+    "incidence_rate": 45.8,
+    "mortality_rate": 15.6,
+    "data_year": 2023,
+    "source": "KOSIS (seed)"
+  }
+]

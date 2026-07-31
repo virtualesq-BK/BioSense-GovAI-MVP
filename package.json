@@ -1,0 +1,22 @@
+{
+  "name": "biosense-govai",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AI-powered biomarker–biosensor co-design platform",
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "npm run dev:web",
+    "dev:web": "npm run dev --workspace=@biosense/web",
+    "dev:api": "cd apps/api && py -m uvicorn biosense.api.main:app --reload --host 127.0.0.1 --port 8000",
+    "build:web": "npm run build --workspace=@biosense/web",
+    "test:api": "cd apps/api && pytest tests -v",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

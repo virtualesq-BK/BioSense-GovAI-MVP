@@ -1,0 +1,53 @@
+[
+  {
+    "id": "bench-001",
+    "input": {
+      "cancer_type": "colorectal",
+      "ctdna_class": "mutation",
+      "region_code": "KR-11",
+      "patient_age": 58,
+      "biomarker_name": "KRAS G12D mutation"
+    },
+    "expected_sensor_types": ["electrochemical"],
+    "expected_recognition": ["aptamer_based"],
+    "min_confidence": 0.5
+  },
+  {
+    "id": "bench-002",
+    "input": {
+      "cancer_type": "lung",
+      "ctdna_class": "mutation",
+      "region_code": "KR-11",
+      "patient_age": 62,
+      "biomarker_name": "EGFR L858R mutation"
+    },
+    "expected_sensor_types": ["optical", "electrochemical"],
+    "expected_recognition": ["antibody_based", "aptamer_based"],
+    "min_confidence": 0.5
+  },
+  {
+    "id": "bench-003",
+    "input": {
+      "cancer_type": "colorectal",
+      "ctdna_class": "methylation",
+      "region_code": "KR-26",
+      "patient_age": 55,
+      "biomarker_name": "SEPT9 methylation"
+    },
+    "expected_sensor_types": ["microfluidic", "electrochemical"],
+    "expected_recognition": ["molecularly_imprinted_polymer", "dna_hybridization"],
+    "min_confidence": 0.5
+  },
+  {
+    "id": "bench-004",
+    "input": {
+      "cancer_type": "lung",
+      "ctdna_class": "fragmentomics",
+      "region_code": "KR-41",
+      "patient_age": 70
+    },
+    "expected_sensor_types": ["electrochemical", "microfluidic", "field_effect_transistor"],
+    "expected_recognition": ["dna_hybridization", "aptamer_based"],
+    "min_confidence": 0.4
+  }
+]

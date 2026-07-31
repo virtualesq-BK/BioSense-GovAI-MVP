@@ -1,0 +1,43 @@
+node_modules
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+
+# Next.js
+apps/web/.next
+apps/web/out
+
+# Python
+__pycache__
+*.py[cod]
+*.egg-info
+.venv
+venv
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite (legacy SvelteKit scaffold)
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# IDE
+.idea
+*.swp
+
+# Docker
+postgres_data
+neo4j_data

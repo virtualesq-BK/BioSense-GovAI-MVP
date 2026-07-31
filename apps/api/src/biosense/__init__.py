@@ -1,0 +1,1 @@
+"""BioSense-GovAI FastAPI application."""

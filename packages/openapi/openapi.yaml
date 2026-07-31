@@ -1,0 +1,778 @@
+openapi: 3.1.0
+info:
+  title: BioSense-GovAI API
+  version: 1.0.0
+  description: |
+    AI-powered biomarker–biosensor co-design platform API.
+    Recommends biosensor strategies based on ctDNA biomarkers,
+    molecular recognition compatibility, Korean public health data,
+    and scientific literature.
+  contact:
+    name: BioSense-GovAI
+    url: https://github.com/biosense-govai
+
+servers:
+  - url: http://localhost:8000
+    description: Local development
+  - url: https://api.biosense-govai.railway.app
+    description: Production (Railway)
+
+tags:
+  - name: Health
+  - name: Users
+  - name: Dashboard
+  - name: Biomarker Cases
+  - name: Recommendations
+  - name: Public Data
+  - name: Knowledge Graph
+
+security:
+  - bearerAuth: []
+
+paths:
+  /v1/health:
+    get:
+      tags: [Health]
+      summary: Health check
+      security: []
+      operationId: getHealth
+      responses:
+        "200":
+          description: Service healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /v1/me:
+    get:
+      tags: [Users]
+      summary: Get current user profile
+      operationId: getCurrentUser
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /v1/dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Dashboard aggregated statistics
+      operationId: getDashboard
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /v1/biomarker-cases:
+    get:
+      tags: [Biomarker Cases]
+      summary: List biomarker cases for current user
+      operationId: listBiomarkerCases
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/PageSizeParam"
+      responses:
+        "200":
+          description: Paginated case list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BiomarkerCaseList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Biomarker Cases]
+      summary: Create a biomarker input case
+      operationId: createBiomarkerCase
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBiomarkerCaseRequest"
+      responses:
+        "201":
+          description: Case created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BiomarkerCase"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /v1/biomarker-cases/{caseId}:
+    get:
+      tags: [Biomarker Cases]
+      summary: Get biomarker case by ID
+      operationId: getBiomarkerCase
+      parameters:
+        - $ref: "#/components/parameters/CaseIdParam"
+      responses:
+        "200":
+          description: Case detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BiomarkerCaseDetail"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/biomarker-cases/{caseId}/recommendations:
+    post:
+      tags: [Recommendations]
+      summary: Generate biosensor recommendations for a case
+      operationId: generateRecommendations
+      parameters:
+        - $ref: "#/components/parameters/CaseIdParam"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateRecommendationsRequest"
+      responses:
+        "202":
+          description: Recommendations generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecommendationList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+
+  /v1/recommendations/{recommendationId}:
+    get:
+      tags: [Recommendations]
+      summary: Get recommendation detail
+      operationId: getRecommendation
+      parameters:
+        - $ref: "#/components/parameters/RecommendationIdParam"
+      responses:
+        "200":
+          description: Recommendation detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Recommendation"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/public-data/regions:
+    get:
+      tags: [Public Data]
+      summary: List Korean administrative regions
+      operationId: listRegions
+      responses:
+        "200":
+          description: Region list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Region"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /v1/public-data/cancer-stats:
+    get:
+      tags: [Public Data]
+      summary: Cancer incidence and mortality by region
+      operationId: getCancerStats
+      parameters:
+        - name: region_code
+          in: query
+          required: true
+          schema:
+            type: string
+            example: KR-11
+        - name: cancer_type
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/CancerType"
+        - name: year
+          in: query
+          schema:
+            type: integer
+            example: 2023
+      responses:
+        "200":
+          description: Cancer statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CancerStats"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/knowledge-graph/search:
+    post:
+      tags: [Knowledge Graph]
+      summary: Search knowledge graph nodes and relationships
+      operationId: searchKnowledgeGraph
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeGraphSearchRequest"
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeGraphSearchResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /v1/knowledge-graph/nodes/{nodeId}:
+    get:
+      tags: [Knowledge Graph]
+      summary: Get knowledge graph node with neighbors
+      operationId: getKnowledgeGraphNode
+      parameters:
+        - $ref: "#/components/parameters/NodeIdParam"
+        - name: depth
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 3
+            default: 1
+      responses:
+        "200":
+          description: Node with neighborhood
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeGraphNode"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase Auth JWT (access token)
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSizeParam:
+      name: page_size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    CaseIdParam:
+      name: caseId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RecommendationIdParam:
+      name: recommendationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    NodeIdParam:
+      name: nodeId
+      in: path
+      required: true
+      schema:
+        type: string
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unprocessable:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+
+    HealthResponse:
+      type: object
+      required: [status, version, dependencies]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded, down]
+        version:
+          type: string
+        dependencies:
+          type: object
+          properties:
+            postgres:
+              type: string
+              enum: [ok, down]
+            neo4j:
+              type: string
+              enum: [ok, down]
+
+    User:
+      type: object
+      required: [id, auth_user_id, email, role, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        auth_user_id:
+          type: string
+          description: Supabase Auth user UUID
+        email:
+          type: string
+          format: email
+        org_name:
+          type: string
+          nullable: true
+        role:
+          type: string
+          enum: [researcher, startup, enterprise, admin]
+        created_at:
+          type: string
+          format: date-time
+
+    DashboardStats:
+      type: object
+      required: [total_cases, total_recommendations, recent_cases]
+      properties:
+        total_cases:
+          type: integer
+        total_recommendations:
+          type: integer
+        recent_cases:
+          type: array
+          items:
+            $ref: "#/components/schemas/BiomarkerCase"
+
+    CancerType:
+      type: string
+      enum:
+        - lung
+        - colorectal
+        - breast
+        - liver
+        - stomach
+        - pancreatic
+        - ovarian
+        - prostate
+        - other
+
+    CtDnaClass:
+      type: string
+      enum:
+        - fragmentomics
+        - methylation
+        - mutation
+        - cnv
+
+    BiomarkerCaseStatus:
+      type: string
+      enum: [draft, submitted, recommended]
+
+    CreateBiomarkerCaseRequest:
+      type: object
+      required: [cancer_type, ctdna_class, patient_age, region_code]
+      properties:
+        cancer_type:
+          $ref: "#/components/schemas/CancerType"
+        ctdna_class:
+          $ref: "#/components/schemas/CtDnaClass"
+        patient_age:
+          type: integer
+          minimum: 0
+          maximum: 120
+        region_code:
+          type: string
+          description: Korean administrative region code (e.g. KR-11 for Seoul)
+          example: KR-11
+        notes:
+          type: string
+          maxLength: 2000
+
+    BiomarkerCase:
+      type: object
+      required:
+        - id
+        - cancer_type
+        - ctdna_class
+        - patient_age
+        - region_code
+        - status
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        cancer_type:
+          $ref: "#/components/schemas/CancerType"
+        ctdna_class:
+          $ref: "#/components/schemas/CtDnaClass"
+        patient_age:
+          type: integer
+        region_code:
+          type: string
+        status:
+          $ref: "#/components/schemas/BiomarkerCaseStatus"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    BiomarkerCaseDetail:
+      allOf:
+        - $ref: "#/components/schemas/BiomarkerCase"
+        - type: object
+          properties:
+            notes:
+              type: string
+              nullable: true
+            public_health_context:
+              $ref: "#/components/schemas/CancerStats"
+            recommendations:
+              type: array
+              items:
+                $ref: "#/components/schemas/RecommendationSummary"
+
+    BiomarkerCaseList:
+      type: object
+      required: [items, total, page, page_size]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/BiomarkerCase"
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+
+    GenerateRecommendationsRequest:
+      type: object
+      properties:
+        top_k:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 3
+
+    SensorType:
+      type: string
+      enum:
+        - electrochemical
+        - optical
+        - piezoelectric
+        - field_effect_transistor
+        - lateral_flow
+        - microfluidic
+
+    RecognitionStrategy:
+      type: string
+      enum:
+        - antibody_based
+        - aptamer_based
+        - molecularly_imprinted_polymer
+        - dna_hybridization
+        - enzyme_linked
+        - crispr_based
+
+    LOD:
+      type: object
+      required: [value, unit]
+      properties:
+        value:
+          type: number
+          minimum: 0
+        unit:
+          type: string
+          example: ng/mL
+
+    ExperimentalProtocol:
+      type: object
+      required: [steps, reagents, duration_hours]
+      properties:
+        steps:
+          type: array
+          items:
+            type: string
+        reagents:
+          type: array
+          items:
+            type: string
+        duration_hours:
+          type: number
+          minimum: 0
+
+    RecommendationEvidence:
+      type: object
+      properties:
+        literature_ids:
+          type: array
+          items:
+            type: string
+        graph_paths:
+          type: array
+          items:
+            type: string
+
+    RecommendationSummary:
+      type: object
+      required: [id, rank, sensor_type, recognition_strategy, confidence_score]
+      properties:
+        id:
+          type: string
+          format: uuid
+        rank:
+          type: integer
+        sensor_type:
+          $ref: "#/components/schemas/SensorType"
+        recognition_strategy:
+          $ref: "#/components/schemas/RecognitionStrategy"
+        confidence_score:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    Recommendation:
+      type: object
+      required:
+        - id
+        - biomarker_case_id
+        - rank
+        - sensor_type
+        - recognition_strategy
+        - expected_sensitivity
+        - expected_specificity
+        - expected_lod
+        - estimated_cost_usd
+        - experimental_protocol
+        - confidence_score
+        - evidence
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        biomarker_case_id:
+          type: string
+          format: uuid
+        rank:
+          type: integer
+        sensor_type:
+          $ref: "#/components/schemas/SensorType"
+        recognition_strategy:
+          $ref: "#/components/schemas/RecognitionStrategy"
+        expected_sensitivity:
+          type: number
+          minimum: 0
+          maximum: 1
+        expected_specificity:
+          type: number
+          minimum: 0
+          maximum: 1
+        expected_lod:
+          $ref: "#/components/schemas/LOD"
+        estimated_cost_usd:
+          type: number
+          minimum: 0
+        experimental_protocol:
+          $ref: "#/components/schemas/ExperimentalProtocol"
+        confidence_score:
+          type: number
+          minimum: 0
+          maximum: 1
+        evidence:
+          $ref: "#/components/schemas/RecommendationEvidence"
+        created_at:
+          type: string
+          format: date-time
+
+    RecommendationList:
+      type: object
+      required: [biomarker_case_id, recommendations]
+      properties:
+        biomarker_case_id:
+          type: string
+          format: uuid
+        recommendations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Recommendation"
+
+    Region:
+      type: object
+      required: [code, name_ko, name_en]
+      properties:
+        code:
+          type: string
+          example: KR-11
+        name_ko:
+          type: string
+          example: 서울특별시
+        name_en:
+          type: string
+          example: Seoul
+
+    CancerStats:
+      type: object
+      required: [region_code, cancer_type, data_year, source]
+      properties:
+        region_code:
+          type: string
+        cancer_type:
+          $ref: "#/components/schemas/CancerType"
+        incidence_rate:
+          type: number
+          description: Per 100,000 population
+        mortality_rate:
+          type: number
+          description: Per 100,000 population
+        data_year:
+          type: integer
+        source:
+          type: string
+          example: KOSIS
+
+    KnowledgeGraphSearchRequest:
+      type: object
+      required: [query]
+      properties:
+        query:
+          type: string
+          minLength: 2
+          example: KRAS mutation ctDNA electrochemical
+        node_types:
+          type: array
+          items:
+            type: string
+            enum:
+              - CtDnaBiomarker
+              - CancerType
+              - RecognitionElement
+              - SensorPlatform
+              - Literature
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+
+    KnowledgeGraphNode:
+      type: object
+      required: [id, labels, properties]
+      properties:
+        id:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+        properties:
+          type: object
+          additionalProperties: true
+        relationships:
+          type: array
+          items:
+            $ref: "#/components/schemas/KnowledgeGraphRelationship"
+
+    KnowledgeGraphRelationship:
+      type: object
+      required: [type, target_id, target_labels]
+      properties:
+        type:
+          type: string
+        target_id:
+          type: string
+        target_labels:
+          type: array
+          items:
+            type: string
+        properties:
+          type: object
+          additionalProperties: true
+
+    KnowledgeGraphSearchResponse:
+      type: object
+      required: [query, nodes, total]
+      properties:
+        query:
+          type: string
+        total:
+          type: integer
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/KnowledgeGraphNode"
