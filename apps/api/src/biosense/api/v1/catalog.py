@@ -1,7 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -11,17 +11,27 @@ from biosense.application.dto.catalog import (
     BiomarkerPriorityScoreResponse,
     BiomarkerSummaryResponse,
     CancerResponse,
+    DataSourceResponse,
+    EvidenceResponse,
+    GlobalCancerStatisticEntry,
+    GlobalCancerStatisticsResponse,
     PaperSummaryRefResponse,
     RecognitionMatchResponse,
+    SensorPerformanceEvidenceResponse,
 )
 from biosense.application.services.biomarker_priority_service import BiomarkerPriorityService
 from biosense.domain.entities.priority_score import BiomarkerPriorityScore
 from biosense.domain.services.normalization import normalize_cancer_type
+from biosense.infrastructure.external.source_registry import DATA_SOURCES
 from biosense.infrastructure.persistence.postgres.models import (
     Biomarker,
     BiomarkerRecognitionMatch,
     Cancer,
     CancerBiomarker,
+    PublicHealthFeature,
+    RecognitionSensorUse,
+    Sensor,
+    SensorPerformance,
 )
 
 router = APIRouter(tags=["Catalog"])
@@ -152,6 +162,127 @@ async def get_biomarker_priority_score(
             status_code=404, detail="Biomarker or cancer type not found"
         )
     return _to_priority_response(score)
+
+
+@router.get("/sources", response_model=list[DataSourceResponse])
+async def list_sources() -> list[DataSourceResponse]:
+    """Every external data source this platform actually integrates or references.
+
+    See docs/data-access.md for the underlying investigation — a source only
+    appears here with access_method="api" if it has a real, working connector.
+    """
+    return [DataSourceResponse(**vars(s)) for s in DATA_SOURCES]
+
+
+@router.get("/evidence", response_model=EvidenceResponse)
+async def get_evidence(
+    biomarker_name: str = Query(...),
+    session: AsyncSession = Depends(get_db_session),
+) -> EvidenceResponse:
+    """All literature and sensor-performance evidence backing one biomarker.
+
+    Distinguishes `is_estimated` (literature-derived estimate) from a real
+    experimental measurement — never presents one as the other.
+    """
+    biomarker = (
+        await session.execute(
+            select(Biomarker)
+            .where(Biomarker.name == biomarker_name)
+            .options(
+                selectinload(Biomarker.papers),
+                selectinload(Biomarker.recognition_matches),
+            )
+        )
+    ).scalars().unique().one_or_none()
+    if biomarker is None:
+        raise HTTPException(status_code=404, detail="Biomarker not found")
+
+    rec_ids = [m.recognition_strategy_id for m in biomarker.recognition_matches]
+    performances: list[SensorPerformanceEvidenceResponse] = []
+    if rec_ids:
+        rows = (
+            await session.execute(
+                select(SensorPerformance, Sensor)
+                .join(Sensor, Sensor.id == SensorPerformance.sensor_id)
+                .join(
+                    RecognitionSensorUse,
+                    RecognitionSensorUse.sensor_id == Sensor.id,
+                )
+                .where(RecognitionSensorUse.recognition_strategy_id.in_(rec_ids))
+                .distinct()
+            )
+        ).all()
+        performances = [
+            SensorPerformanceEvidenceResponse(
+                sensor_name=sensor.name,
+                sensor_type=sensor.sensor_type,
+                sensitivity=float(perf.sensitivity) if perf.sensitivity is not None else None,
+                specificity=float(perf.specificity) if perf.specificity is not None else None,
+                lod_value=float(perf.lod_value) if perf.lod_value is not None else None,
+                lod_unit=perf.lod_unit,
+                is_estimated=perf.is_estimated,
+                extraction_confidence=(
+                    float(perf.extraction_confidence)
+                    if perf.extraction_confidence is not None
+                    else None
+                ),
+                source=perf.source,
+            )
+            for perf, sensor in rows
+        ]
+
+    return EvidenceResponse(
+        biomarker_name=biomarker.name,
+        papers=[
+            PaperSummaryRefResponse(external_id=p.external_id, title=p.title, source=p.source)
+            for p in biomarker.papers
+        ],
+        sensor_performances=performances,
+    )
+
+
+@router.get("/global-cancer-statistics", response_model=GlobalCancerStatisticsResponse)
+async def get_global_cancer_statistics(
+    session: AsyncSession = Depends(get_db_session),
+) -> GlobalCancerStatisticsResponse:
+    """National-average incidence/mortality per cancer type from live-integrated sources.
+
+    Currently Korea only (KOSIS/KDCA) — see docs/data-access.md for why CDC USCS
+    (US aggregate stats) is not automatable and is instead surfaced as an external
+    reference link in /v1/sources rather than merged into this endpoint's data.
+    """
+    cancers = (await session.execute(select(Cancer))).scalars().all()
+    entries: list[GlobalCancerStatisticEntry] = []
+    for cancer in cancers:
+        avg_incidence = await session.scalar(
+            select(func.avg(PublicHealthFeature.value)).where(
+                PublicHealthFeature.cancer_id == cancer.id,
+                PublicHealthFeature.feature_type == "incidence",
+            )
+        )
+        avg_mortality = await session.scalar(
+            select(func.avg(PublicHealthFeature.value)).where(
+                PublicHealthFeature.cancer_id == cancer.id,
+                PublicHealthFeature.feature_type == "mortality",
+            )
+        )
+        entries.append(
+            GlobalCancerStatisticEntry(
+                cancer_code=cancer.code,
+                name_en=cancer.name_en,
+                national_incidence_avg=float(avg_incidence) if avg_incidence is not None else None,
+                national_mortality_avg=float(avg_mortality) if avg_mortality is not None else None,
+                data_source="KOSIS/KDCA (Korea)",
+                missing_data=avg_incidence is None and avg_mortality is None,
+            )
+        )
+    return GlobalCancerStatisticsResponse(
+        entries=entries,
+        note=(
+            "Only Korea (KOSIS/KDCA) is live-integrated. For U.S. aggregate cancer "
+            "statistics, see the CDC USCS external reference in GET /v1/sources."
+        ),
+    )
 
 
 def _to_priority_response(score: BiomarkerPriorityScore) -> BiomarkerPriorityScoreResponse:
