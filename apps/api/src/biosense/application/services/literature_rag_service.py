@@ -27,7 +27,16 @@ class LiteratureRetrievalService:
         self, query: str, top_k: int | None = None
     ) -> list[RetrievedChunk]:
         k = top_k or settings.literature_rag_top_k
-        embedding = await self._embedder.embed_text(query)
+        try:
+            embedding = await self._embedder.embed_text(query)
+        except Exception as exc:
+            # Embedding is a remote call (OpenAI or proxy) that can fail for
+            # reasons outside this request (rate limits, upstream credits,
+            # network). Literature evidence is an enrichment, not a hard
+            # dependency — degrade to no literature results rather than
+            # failing the whole recommendation/RAG request.
+            logger.error("embedding_failed_degrading_to_no_literature", error=str(exc))
+            return []
         chunks = await self._repo.similarity_search(embedding, top_k=k)
         logger.info("retrieval_complete", query=query[:80], results=len(chunks))
         return chunks
