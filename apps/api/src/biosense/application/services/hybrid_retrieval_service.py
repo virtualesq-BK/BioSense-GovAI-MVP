@@ -76,6 +76,7 @@ def _map_literature_to_candidates(
                     best_score = boosted
                 cites.append(
                     {
+                        "paper_id": chunk.paper_id,
                         "paper_external_id": chunk.paper_external_id,
                         "paper_title": chunk.paper_title,
                         "chunk_id": chunk.chunk_id,

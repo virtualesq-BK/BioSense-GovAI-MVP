@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/lib/i18n/language-provider';
 
 export function UserMenu() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,7 +33,7 @@ export function UserMenu() {
           {email}
         </span>
       )}
-      <Button variant="ghost" size="icon" aria-label="로그아웃" onClick={handleSignOut}>
+      <Button variant="ghost" size="icon" aria-label={t('auth.signOut')} onClick={handleSignOut}>
         <LogOut className="h-4 w-4" />
       </Button>
     </div>

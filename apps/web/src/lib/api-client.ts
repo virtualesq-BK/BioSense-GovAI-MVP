@@ -74,6 +74,23 @@ export type ExpectedMetrics = {
   estimated_cost_usd: number;
 };
 
+export type LiteratureCitation = {
+  paper_id?: string;
+  paper_external_id: string;
+  paper_title?: string;
+  chunk_id?: string;
+  excerpt: string;
+  relevance_score: number;
+};
+
+export type RecommendationEvidence = {
+  literature_ids?: string[];
+  citations?: LiteratureCitation[];
+  graph_paths?: string[];
+  public_health?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
 export type SensorRecommendation = {
   rank: number;
   sensor_type: string;
@@ -86,7 +103,7 @@ export type SensorRecommendation = {
   confidence_score: number;
   composite_score: number;
   rationale: string;
-  evidence: Record<string, unknown>;
+  evidence: RecommendationEvidence;
 };
 
 export type GenerateRecommendationResponse = {
@@ -146,6 +163,9 @@ export type PaperSummary = {
   chunk_count: number;
   pdf_filename: string | null;
   created_at: string;
+  authors?: string[] | null;
+  abstract?: string | null;
+  metadata?: Record<string, unknown>;
 };
 
 export type IngestionStatus = {
@@ -217,6 +237,8 @@ export const publicDataApi = {
 
 export const literatureApi = {
   listPapers: () => apiFetch<PaperSummary[]>('/v1/literature/papers'),
+  getPaper: (paperId: string) =>
+    apiFetch<PaperSummary>(`/v1/literature/papers/${encodeURIComponent(paperId)}`),
   getIngestionStatus: () => apiFetch<IngestionStatus>('/v1/literature/ingestion/status'),
   ingestText: (body: { external_id: string; title: string; text: string }) =>
     apiFetch<PaperSummary>('/v1/literature/papers/ingest-text', {

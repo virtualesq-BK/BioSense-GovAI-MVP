@@ -92,9 +92,11 @@ export function MetricsBarChart({
 }
 
 export function StatusDonutChart({
-  data
+  data,
+  totalLabel = 'Total'
 }: {
   data: Array<{ name: string; value: number }>;
+  totalLabel?: string;
 }) {
   const total = data.reduce((sum, d) => sum + d.value, 0);
   return (
@@ -120,7 +122,7 @@ export function StatusDonutChart({
       </ResponsiveContainer>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-2xl font-bold">{total}</span>
-        <span className="text-xs text-[var(--muted-foreground)]">합계</span>
+        <span className="text-xs text-[var(--muted-foreground)]">{totalLabel}</span>
       </div>
     </div>
   );

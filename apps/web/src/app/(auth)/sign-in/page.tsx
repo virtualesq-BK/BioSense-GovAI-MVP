@@ -7,8 +7,10 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { useLanguage } from '@/lib/i18n/language-provider';
 
 function SignInForm() {
+  const { t } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') ?? '/dashboard';
@@ -35,14 +37,14 @@ function SignInForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>로그인</CardTitle>
-        <CardDescription>Supabase 계정으로 BioSense-GovAI에 접속합니다.</CardDescription>
+        <CardTitle>{t('auth.signIn')}</CardTitle>
+        <CardDescription>{t('auth.signIn.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-sm font-medium" htmlFor="email">
-              이메일
+              {t('auth.email')}
             </label>
             <Input
               id="email"
@@ -55,7 +57,7 @@ function SignInForm() {
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium" htmlFor="password">
-              비밀번호
+              {t('auth.password')}
             </label>
             <Input
               id="password"
@@ -68,13 +70,13 @@ function SignInForm() {
           </div>
           {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? '로그인 중…' : '로그인'}
+            {loading ? t('auth.signingIn') : t('auth.signIn')}
           </Button>
         </form>
         <p className="mt-6 text-center text-sm text-[var(--muted-foreground)]">
-          계정이 없으신가요?{' '}
+          {t('auth.noAccount')}{' '}
           <Link href="/sign-up" className="text-[var(--accent)] hover:underline">
-            회원가입
+            {t('auth.signUp')}
           </Link>
         </p>
       </CardContent>
@@ -83,9 +85,10 @@ function SignInForm() {
 }
 
 export default function SignInPage() {
+  const { t } = useLanguage();
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--background)] p-4">
-      <Suspense fallback={<div className="text-sm text-[var(--muted-foreground)]">로딩 중…</div>}>
+      <Suspense fallback={<div className="text-sm text-[var(--muted-foreground)]">{t('auth.loading')}</div>}>
         <SignInForm />
       </Suspense>
     </div>

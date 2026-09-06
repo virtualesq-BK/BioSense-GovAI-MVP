@@ -34,8 +34,10 @@ import {
   type IngestionStatus,
   type MonitoringStatus
 } from '@/lib/api-client';
+import { useLanguage } from '@/lib/i18n/language-provider';
 
 export default function DashboardPage() {
+  const { t, locale } = useLanguage();
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [monitoring, setMonitoring] = useState<MonitoringStatus | null>(null);
   const [litStatus, setLitStatus] = useState<IngestionStatus | null>(null);
@@ -72,18 +74,16 @@ export default function DashboardPage() {
 
       if (healthResult.status === 'rejected') {
         const reason = healthResult.reason;
-        setError(reason instanceof Error ? reason.message : '데이터 로드 실패');
+        setError(reason instanceof Error ? reason.message : t('common.error.loadFailed'));
       } else if (failures.length > 0) {
-        setError(
-          '일부 데이터를 불러오지 못했습니다. Supabase(Postgres)가 연결되어 있는지 확인하세요.'
-        );
+        setError(t('common.error.partial'));
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : '데이터 로드 실패');
+      setError(e instanceof Error ? e.message : t('common.error.loadFailed'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     load();
@@ -92,11 +92,11 @@ export default function DashboardPage() {
   const jobTrend = useMemo(() => {
     if (!monitoring?.recent_jobs.length) {
       return [
-        { label: '월', value: 0 },
-        { label: '화', value: 0 },
-        { label: '수', value: 0 },
-        { label: '목', value: 0 },
-        { label: '금', value: 0 }
+        { label: t('dashboard.day.mon'), value: 0 },
+        { label: t('dashboard.day.tue'), value: 0 },
+        { label: t('dashboard.day.wed'), value: 0 },
+        { label: t('dashboard.day.thu'), value: 0 },
+        { label: t('dashboard.day.fri'), value: 0 }
       ];
     }
     const byDay = monitoring.recent_jobs.slice(0, 7).reverse();
@@ -104,41 +104,41 @@ export default function DashboardPage() {
       label: `J${i + 1}`,
       value: job.records_stored
     }));
-  }, [monitoring]);
+  }, [monitoring, t]);
 
   const literatureDonut = useMemo(
     () =>
       litStatus
         ? [
-            { name: '인덱싱 완료', value: litStatus.indexed_papers },
-            { name: '대기', value: litStatus.pending_papers },
-            { name: '실패', value: litStatus.failed_papers }
+            { name: t('dashboard.donut.indexed'), value: litStatus.indexed_papers },
+            { name: t('dashboard.donut.pending'), value: litStatus.pending_papers },
+            { name: t('dashboard.donut.failed'), value: litStatus.failed_papers }
           ].filter((d) => d.value > 0)
         : [],
-    [litStatus]
+    [litStatus, t]
   );
 
   const metricsBar = useMemo(
     () =>
       litStatus
         ? [
-            { label: '논문', value: litStatus.total_papers },
-            { label: '청크', value: litStatus.total_chunks },
-            { label: '완료', value: litStatus.indexed_papers },
-            { label: '대기', value: litStatus.pending_papers }
+            { label: t('dashboard.metric.papers'), value: litStatus.total_papers },
+            { label: t('dashboard.metric.chunks'), value: litStatus.total_chunks },
+            { label: t('dashboard.stat.completed'), value: litStatus.indexed_papers },
+            { label: t('dashboard.metric.pending'), value: litStatus.pending_papers }
           ]
         : [],
-    [litStatus]
+    [litStatus, t]
   );
 
   return (
     <PageLayout
-      title="대시보드"
-      description="플랫폼 상태, 데이터 파이프라인, 문헌 인덱스 개요"
+      title={t('dashboard.title')}
+      description={t('dashboard.description')}
       actions={
         <Button variant="outline" size="sm" onClick={load} disabled={loading}>
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          새로고침
+          {t('common.refresh')}
         </Button>
       }
     >
@@ -150,7 +150,7 @@ export default function DashboardPage() {
               : 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-300'
           }`}
         >
-          {health ? error : `API 연결 실패: ${error}. 백엔드가 실행 중인지 확인하세요.`}
+          {health ? error : `${t('common.error.apiDown')}: ${error}. ${t('common.error.checkBackend')}`}
         </div>
       )}
 
@@ -160,27 +160,27 @@ export default function DashboardPage() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard
-              title="API 상태"
-              value={health?.status === 'ok' ? '정상' : '점검 필요'}
+              title={t('dashboard.stat.apiStatus')}
+              value={health?.status === 'ok' ? t('dashboard.stat.ok') : t('dashboard.stat.needsAttention')}
               description={`v${health?.version ?? '—'}`}
               icon={health?.status === 'ok' ? CheckCircle2 : XCircle}
             />
             <StatCard
-              title="수집 작업"
+              title={t('dashboard.stat.ingestionJobs')}
               value={monitoring?.total_jobs ?? 0}
-              description={`완료 ${monitoring?.completed_jobs ?? 0} · 실패 ${monitoring?.failed_jobs ?? 0}`}
+              description={`${t('dashboard.stat.completed')} ${monitoring?.completed_jobs ?? 0} · ${t('dashboard.stat.failed')} ${monitoring?.failed_jobs ?? 0}`}
               icon={Database}
             />
             <StatCard
-              title="인덱싱 논문"
+              title={t('dashboard.stat.indexedPapers')}
               value={litStatus?.indexed_papers ?? 0}
-              description={`전체 ${litStatus?.total_papers ?? 0}편`}
+              description={`${t('dashboard.stat.totalPapers')} ${litStatus?.total_papers ?? 0}${t('dashboard.stat.papersUnit')}`}
               icon={BookOpen}
             />
             <StatCard
-              title="벡터 청크"
+              title={t('dashboard.stat.vectorChunks')}
               value={litStatus?.total_chunks ?? 0}
-              description="RAG 검색 인덱스"
+              description={t('dashboard.stat.ragIndex')}
               icon={Sparkles}
             />
           </div>
@@ -188,8 +188,8 @@ export default function DashboardPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>수집 파이프라인 추이</CardTitle>
-                <CardDescription>최근 작업별 저장 레코드 수</CardDescription>
+                <CardTitle>{t('dashboard.chart.ingestionTrend')}</CardTitle>
+                <CardDescription>{t('dashboard.chart.recentRecords')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <TrendAreaChart data={jobTrend} />
@@ -198,15 +198,15 @@ export default function DashboardPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>문헌 인덱스 현황</CardTitle>
-                <CardDescription>논문 처리 상태 분포</CardDescription>
+                <CardTitle>{t('dashboard.chart.literatureStatus')}</CardTitle>
+                <CardDescription>{t('dashboard.chart.statusDistribution')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {literatureDonut.length > 0 ? (
-                  <StatusDonutChart data={literatureDonut} />
+                  <StatusDonutChart data={literatureDonut} totalLabel={t('dashboard.donut.total')} />
                 ) : (
                   <p className="py-16 text-center text-sm text-[var(--muted-foreground)]">
-                    문헌 데이터 없음
+                    {t('dashboard.chart.noLiteratureData')}
                   </p>
                 )}
               </CardContent>
@@ -214,7 +214,7 @@ export default function DashboardPage() {
 
             <Card className="lg:col-span-2">
               <CardHeader>
-                <CardTitle>문헌·데이터 메트릭</CardTitle>
+                <CardTitle>{t('dashboard.chart.metrics')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <MetricsBarChart data={metricsBar} />
@@ -225,12 +225,12 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>최근 수집 작업</CardTitle>
-                <CardDescription>공공 데이터 ETL 작업 이력</CardDescription>
+                <CardTitle>{t('dashboard.recentJobs.title')}</CardTitle>
+                <CardDescription>{t('dashboard.recentJobs.description')}</CardDescription>
               </div>
               <Link href="/admin">
                 <Button variant="outline" size="sm">
-                  관리 콘솔
+                  {t('common.adminConsole')}
                 </Button>
               </Link>
             </CardHeader>
@@ -250,59 +250,61 @@ export default function DashboardPage() {
       )}
     </PageLayout>
   );
-}
 
-function JobsTable({ jobs }: { jobs: IngestionJob[] }) {
-  if (!jobs.length) {
+  function DependencyCard({ name, status }: { name: string; status: string }) {
+    const ok = status === 'ok';
     return (
-      <p className="px-6 py-8 text-center text-sm text-[var(--muted-foreground)]">
-        수집 작업 이력이 없습니다.
-      </p>
+      <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+        <span className="font-medium">{name}</span>
+        <Badge variant={ok ? 'success' : 'destructive'}>
+          {ok ? t('dashboard.dependency.connected') : t('dashboard.dependency.offline')}
+        </Badge>
+      </div>
     );
   }
 
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>소스</TableHead>
-          <TableHead>상태</TableHead>
-          <TableHead>추출</TableHead>
-          <TableHead>저장</TableHead>
-          <TableHead>생성일</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {jobs.map((job) => (
-          <TableRow key={job.id}>
-            <TableCell className="font-medium">{job.source}</TableCell>
-            <TableCell>
-              <JobStatusBadge status={job.status} />
-            </TableCell>
-            <TableCell>{job.records_extracted}</TableCell>
-            <TableCell>{job.records_stored}</TableCell>
-            <TableCell className="text-[var(--muted-foreground)]">
-              {new Date(job.created_at).toLocaleDateString('ko-KR')}
-            </TableCell>
+  function JobsTable({ jobs }: { jobs: IngestionJob[] }) {
+    if (!jobs.length) {
+      return (
+        <p className="px-6 py-8 text-center text-sm text-[var(--muted-foreground)]">
+          {t('dashboard.recentJobs.empty')}
+        </p>
+      );
+    }
+
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t('dashboard.table.source')}</TableHead>
+            <TableHead>{t('dashboard.table.status')}</TableHead>
+            <TableHead>{t('dashboard.table.extracted')}</TableHead>
+            <TableHead>{t('dashboard.table.stored')}</TableHead>
+            <TableHead>{t('dashboard.table.createdAt')}</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
+        </TableHeader>
+        <TableBody>
+          {jobs.map((job) => (
+            <TableRow key={job.id}>
+              <TableCell className="font-medium">{job.source}</TableCell>
+              <TableCell>
+                <JobStatusBadge status={job.status} />
+              </TableCell>
+              <TableCell>{job.records_extracted}</TableCell>
+              <TableCell>{job.records_stored}</TableCell>
+              <TableCell className="text-[var(--muted-foreground)]">
+                {new Date(job.created_at).toLocaleDateString(locale === 'ko' ? 'ko-KR' : 'en-US')}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
+  }
 }
 
 function JobStatusBadge({ status }: { status: string }) {
   const variant =
     status === 'completed' ? 'success' : status === 'failed' ? 'destructive' : 'warning';
   return <Badge variant={variant}>{status}</Badge>;
-}
-
-function DependencyCard({ name, status }: { name: string; status: string }) {
-  const ok = status === 'ok';
-  return (
-    <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
-      <span className="font-medium">{name}</span>
-      <Badge variant={ok ? 'success' : 'destructive'}>{ok ? '연결됨' : '오프라인'}</Badge>
-    </div>
-  );
 }

@@ -36,11 +36,17 @@ async def list_papers(
 
 @router.get("/literature/papers/{paper_id}", response_model=PaperSummary)
 async def get_paper(
-    paper_id: uuid.UUID,
+    paper_id: str,
     session: AsyncSession = Depends(get_db_session),
 ) -> PaperSummary:
     repo = LiteratureRepository(session)
-    paper = await repo.get_paper(paper_id)
+    paper = None
+    try:
+        paper = await repo.get_paper(uuid.UUID(paper_id))
+    except ValueError:
+        paper = None
+    if paper is None:
+        paper = await repo.get_paper_by_external_id(paper_id)
     if not paper:
         raise HTTPException(status_code=404, detail="Paper not found")
     return _paper_to_summary(paper)
@@ -193,5 +199,8 @@ def _paper_to_summary(paper) -> PaperSummary:
         ingestion_status=paper.ingestion_status,
         chunk_count=paper.chunk_count,
         pdf_filename=paper.pdf_filename,
-        created_at=paper.created_at.isoformat(),
+        created_at=paper.created_at.isoformat() if paper.created_at else "",
+        authors=list(paper.authors) if paper.authors else None,
+        abstract=paper.abstract,
+        metadata=dict(paper.metadata_ or {}),
     )

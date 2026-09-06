@@ -1,0 +1,53 @@
+services:
+  - type: web
+    name: biosense-api
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: ./apps/api
+    plan: free
+    healthCheckPath: /v1/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: NEO4J_URI
+        sync: false
+      - key: NEO4J_USER
+        sync: false
+      - key: NEO4J_PASSWORD
+        sync: false
+      - key: OPENAI_API_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o
+      - key: OPENAI_EMBEDDING_MODEL
+        value: text-embedding-3-small
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: KOSIS_API_KEY
+        sync: false
+      - key: KDCA_API_URL
+        sync: false
+      - key: KDCA_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://biosensegovai.vercel.app
+      - key: APP_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: INGESTION_SCHEDULER_ENABLED
+        value: "true"
+      - key: INGESTION_CRON_HOUR
+        value: "3"
+      - key: INGESTION_CACHE_TTL_HOURS
+        value: "24"
+      - key: INGESTION_RETRY_MAX_ATTEMPTS
+        value: "3"

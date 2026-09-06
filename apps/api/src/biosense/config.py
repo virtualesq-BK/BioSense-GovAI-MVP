@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     kdca_api_url: str = ""
     kdca_base_url: str = "https://apis.data.go.kr/B552584/EssentialHealthIndicatorsService"
 
+    # PubMed / NCBI E-utilities
+    pubmed_api_key: str = ""
+    pubmed_base_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
+
     # Ingestion pipeline
     ingestion_scheduler_enabled: bool = True
     ingestion_cron_hour: int = 3

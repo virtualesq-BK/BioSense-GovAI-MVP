@@ -4,6 +4,7 @@ import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserMenu } from '@/components/auth/user-menu';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
+import { LanguageToggle } from '@/components/layout/language-toggle';
 
 type TopbarProps = {
   title: string;
@@ -29,6 +30,7 @@ export function Topbar({ title, description, onMenuClick, actions }: TopbarProps
       <div className="flex items-center gap-2">
         {actions}
         <UserMenu />
+        <LanguageToggle />
         <ThemeToggle />
       </div>
     </header>

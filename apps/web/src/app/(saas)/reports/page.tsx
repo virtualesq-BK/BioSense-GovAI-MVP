@@ -20,9 +20,11 @@ import { exportReportToPdf, exportTableToPdf } from '@/lib/pdf-export';
 import { deleteReport, getReport, listReports, type SavedReport } from '@/lib/reports-store';
 import { formatPercent } from '@/lib/utils';
 import Link from 'next/link';
+import { useLanguage } from '@/lib/i18n/language-provider';
 
 function ReportsContent() {
   const searchParams = useSearchParams();
+  const { t, locale } = useLanguage();
   const selectedId = searchParams.get('id');
   const [reports, setReports] = useState<SavedReport[]>([]);
   const [selected, setSelected] = useState<SavedReport | null>(null);
@@ -48,15 +50,21 @@ function ReportsContent() {
 
   function handleExportSelected() {
     if (!selected) return;
-    exportReportToPdf(selected);
+    exportReportToPdf(selected, locale);
   }
 
   function handleExportTable() {
     exportTableToPdf(
-      'BioSense 리포트 목록',
-      ['생성일', '암종', '지역', '추천 수', 'Top 센서'],
+      t('reports.pdfListTitle'),
+      [
+        t('reports.pdfCol.createdAt'),
+        t('reports.pdfCol.cancerType'),
+        t('reports.pdfCol.region'),
+        t('reports.pdfCol.count'),
+        t('reports.pdfCol.topSensor')
+      ],
       reports.map((r) => [
-        new Date(r.createdAt).toLocaleDateString('ko-KR'),
+        new Date(r.createdAt).toLocaleDateString(locale === 'ko' ? 'ko-KR' : 'en-US'),
         r.input.cancer_type,
         r.input.region_code,
         String(r.recommendations.length),
@@ -67,27 +75,27 @@ function ReportsContent() {
 
   return (
     <PageLayout
-      title="리포트"
-      description="저장된 추천 결과 조회 및 PDF보내기"
+      title={t('reports.title')}
+      description={t('reports.description')}
       actions={
         <>
           {reports.length > 0 && (
             <>
               <Button variant="outline" size="sm" onClick={handleExportTable}>
                 <FileDown className="h-4 w-4" />
-                목록 PDF
+                {t('reports.listPdf')}
               </Button>
               {selected && (
                 <Button size="sm" onClick={handleExportSelected}>
                   <FileDown className="h-4 w-4" />
-                  선택 PDF
+                  {t('reports.selectedPdf')}
                 </Button>
               )}
             </>
           )}
           <Link href="/recommendations">
             <Button variant="outline" size="sm">
-              새 추천
+              {t('reports.newRecommendation')}
             </Button>
           </Link>
         </>
@@ -96,12 +104,12 @@ function ReportsContent() {
       {reports.length === 0 ? (
         <Card>
           <CardContent className="flex min-h-[320px] flex-col items-center justify-center text-center">
-            <p className="font-medium">저장된 리포트가 없습니다</p>
+            <p className="font-medium">{t('reports.empty.title')}</p>
             <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-              추천 페이지에서 결과를 생성한 뒤 &quot;리포트 저장&quot;을 클릭하세요.
+              {t('reports.empty.description')}
             </p>
             <Link href="/recommendations" className="mt-6">
-              <Button>추천 생성하기</Button>
+              <Button>{t('reports.generate')}</Button>
             </Link>
           </CardContent>
         </Card>
@@ -109,15 +117,18 @@ function ReportsContent() {
         <div className="grid gap-6 lg:grid-cols-5">
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>저장된 리포트</CardTitle>
-              <CardDescription>{reports.length}건</CardDescription>
+              <CardTitle>{t('reports.savedReports')}</CardTitle>
+              <CardDescription>
+                {reports.length}
+                {t('reports.count')}
+              </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>날짜</TableHead>
-                    <TableHead>암종</TableHead>
+                    <TableHead>{t('reports.table.date')}</TableHead>
+                    <TableHead>{t('reports.table.cancerType')}</TableHead>
                     <TableHead />
                   </TableRow>
                 </TableHeader>
@@ -129,7 +140,7 @@ function ReportsContent() {
                       onClick={() => setSelected(r)}
                     >
                       <TableCell>
-                        {new Date(r.createdAt).toLocaleDateString('ko-KR')}
+                        {new Date(r.createdAt).toLocaleDateString(locale === 'ko' ? 'ko-KR' : 'en-US')}
                       </TableCell>
                       <TableCell>{r.input.cancer_type}</TableCell>
                       <TableCell>
@@ -156,28 +167,31 @@ function ReportsContent() {
               <>
                 <Card>
                   <CardHeader>
-                    <CardTitle>입력 조건</CardTitle>
+                    <CardTitle>{t('reports.inputConditions')}</CardTitle>
                     <CardDescription>
-                      {new Date(selected.createdAt).toLocaleString('ko-KR')}
+                      {new Date(selected.createdAt).toLocaleString(locale === 'ko' ? 'ko-KR' : 'en-US')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <dl className="grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <dt className="text-[var(--muted-foreground)]">암종</dt>
+                        <dt className="text-[var(--muted-foreground)]">{t('reports.field.cancerType')}</dt>
                         <dd className="font-medium">{selected.input.cancer_type}</dd>
                       </div>
                       <div>
-                        <dt className="text-[var(--muted-foreground)]">ctDNA</dt>
+                        <dt className="text-[var(--muted-foreground)]">{t('reports.field.ctdna')}</dt>
                         <dd className="font-medium">{selected.input.ctdna_class}</dd>
                       </div>
                       <div>
-                        <dt className="text-[var(--muted-foreground)]">지역</dt>
+                        <dt className="text-[var(--muted-foreground)]">{t('reports.field.region')}</dt>
                         <dd className="font-medium">{selected.input.region_code}</dd>
                       </div>
                       <div>
-                        <dt className="text-[var(--muted-foreground)]">연령</dt>
-                        <dd className="font-medium">{selected.input.patient_age}세</dd>
+                        <dt className="text-[var(--muted-foreground)]">{t('reports.field.age')}</dt>
+                        <dd className="font-medium">
+                          {selected.input.patient_age}
+                          {t('reports.ageUnit')}
+                        </dd>
                       </div>
                     </dl>
                   </CardContent>
@@ -195,7 +209,7 @@ function ReportsContent() {
                       <p className="text-sm text-[var(--muted-foreground)]">{rec.rationale}</p>
                       <div className="mt-3 flex flex-wrap gap-2 text-xs">
                         <Badge variant="secondary">
-                          민감도 {formatPercent(rec.expected_metrics.sensitivity)}
+                          {t('reports.sensitivity')} {formatPercent(rec.expected_metrics.sensitivity)}
                         </Badge>
                         <Badge variant="secondary">
                           LOD {rec.expected_metrics.lod_value} {rec.expected_metrics.lod_unit}
@@ -206,7 +220,7 @@ function ReportsContent() {
                 ))}
               </>
             ) : (
-              <PageLoading label="리포트를 선택하세요" />
+              <PageLoading label={t('reports.selectPrompt')} />
             )}
           </div>
         </div>

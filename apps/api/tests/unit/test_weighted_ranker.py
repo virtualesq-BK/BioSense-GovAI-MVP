@@ -53,3 +53,16 @@ def test_confidence_scorer_bounded() -> None:
     candidate = _sample_candidate()
     conf = ConfidenceScorer.compute(candidate, literature_score=0.8, composite_score=0.85)
     assert 0.0 <= conf <= 1.0
+
+
+def test_confidence_scorer_penalizes_conflicting_sources() -> None:
+    candidate = _sample_candidate(conflicting_sources=True)
+    base = ConfidenceScorer.compute(
+        _sample_candidate(conflicting_sources=False),
+        literature_score=0.8,
+        composite_score=0.85,
+    )
+    penalized = ConfidenceScorer.compute(
+        candidate, literature_score=0.8, composite_score=0.85
+    )
+    assert base - penalized == ConfidenceScorer.CONFLICT_PENALTY

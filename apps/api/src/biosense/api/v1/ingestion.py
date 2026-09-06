@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from biosense.api.dependencies import get_db_session
 from biosense.application.dto.ingestion import (
     CancerStatsResponse,
+    HarvestLiteratureRequest,
+    HarvestLiteratureResponse,
     IngestionJobResponse,
     MonitoringStatusResponse,
     RegionResponse,
@@ -15,6 +17,7 @@ from biosense.application.dto.ingestion import (
 )
 from biosense.application.services.monitoring_service import MonitoringService
 from biosense.application.services.pipeline_service import PublicDataIngestionPipeline
+from biosense.application.services.pubmed_harvest_service import PubmedHarvestService
 from biosense.infrastructure.external.seed_loader import KR_REGIONS
 from biosense.infrastructure.persistence.postgres.ingestion_repository import IngestionRepository
 from biosense.infrastructure.persistence.postgres.models import Cancer, PublicHealthFeature
@@ -38,6 +41,20 @@ async def trigger_ingestion(
         job_id=str(job_id),
         message=f"Ingestion job completed for source={body.source}",
     )
+
+
+@router.post("/ingestion/literature/harvest", response_model=HarvestLiteratureResponse)
+async def harvest_literature(
+    body: HarvestLiteratureRequest | None = None,
+    session: AsyncSession = Depends(get_db_session),
+) -> HarvestLiteratureResponse:
+    request = body or HarvestLiteratureRequest()
+    service = PubmedHarvestService(session)
+    result = await service.harvest(
+        queries=request.queries,
+        max_results_per_query=request.max_results_per_query,
+    )
+    return HarvestLiteratureResponse(**result)
 
 
 @router.get("/ingestion/jobs", response_model=list[IngestionJobResponse])

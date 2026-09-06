@@ -52,15 +52,8 @@ class RecommendationEngineService:
     ) -> list[SensorRecommendation]:
         start = time.perf_counter()
 
-        incidence, mortality, ph_score = await self._public_health.fetch_features(
-            inp.cancer_type, inp.region_code
-        )
-        features = self._features.extract(
-            inp,
-            incidence_rate=incidence,
-            mortality_rate=mortality,
-            public_health_score=ph_score,
-        )
+        ph = await self._public_health.fetch_features(inp.cancer_type, inp.region_code)
+        features = self._features.extract(inp, public_health=ph)
 
         graph_candidates = await self._graph.retrieve_candidates(features)
         ranked = await self._hybrid.retrieve_and_rank(features, graph_candidates, top_k=top_k)
@@ -96,16 +89,30 @@ class RecommendationEngineService:
                 "duration_hours": 6.0,
             }
 
+            cites = scored.literature_citations
+            literature_ids: list[str] = []
+            seen_ids: set[str] = set()
+            for cit in cites:
+                pid = cit.get("paper_id") or cit.get("paper_external_id")
+                if pid and pid not in seen_ids:
+                    seen_ids.add(pid)
+                    literature_ids.append(str(pid))
+
+            public_health_evidence: dict = {
+                "incidence_rate": ph.incidence_rate,
+                "mortality_rate": ph.mortality_rate,
+                "region_code": ph.region_code or inp.region_code,
+                "national_incidence_avg": ph.national_incidence_avg,
+                "national_mortality_avg": ph.national_mortality_avg,
+            }
+            if features.public_health_narrative:
+                public_health_evidence["narrative"] = features.public_health_narrative
+
             evidence = {
-                "literature_ids": [
-                    cit["paper_external_id"] for cit in scored.literature_citations
-                ],
+                "literature_ids": literature_ids,
+                "citations": cites,
                 "graph_paths": [c.graph_path],
-                "public_health": {
-                    "incidence_rate": incidence,
-                    "mortality_rate": mortality,
-                    "region_code": inp.region_code,
-                },
+                "public_health": public_health_evidence,
             }
 
             recommendations.append(

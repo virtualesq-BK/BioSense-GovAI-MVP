@@ -8,6 +8,7 @@ import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from biosense.application.services.chunking_service import ChunkingService
+from biosense.application.services.metric_extraction_service import MetricExtractionService
 from biosense.config import settings
 from biosense.domain.entities.literature import (
     BiomarkerRecommendation,
@@ -22,13 +23,14 @@ logger = structlog.get_logger()
 
 
 class LiteratureIngestionPipeline:
-    """PDF → parse → chunk → embed → store in pgvector."""
+    """PDF → parse → chunk → embed → store in pgvector → extract metrics."""
 
     def __init__(self, session: AsyncSession) -> None:
         self._repo = LiteratureRepository(session)
         self._parser = PdfParser()
         self._chunker = ChunkingService()
         self._embedder = EmbeddingService()
+        self._metrics = MetricExtractionService(session)
         self._session = session
 
     async def ingest_pdf_bytes(
@@ -73,6 +75,7 @@ class LiteratureIngestionPipeline:
             count = await self._repo.replace_chunks(paper.id, chunks, embeddings)
             await self._repo.complete_ingestion(job.id, paper.id, count)
             await self._session.commit()
+            await self._run_metric_extraction(paper.id)
             logger.info("literature_ingested", paper_id=str(paper.id), chunks=count)
             return paper.id
         except Exception as exc:
@@ -102,14 +105,34 @@ class LiteratureIngestionPipeline:
         title: str,
         text: str,
         authors: list[str] | None = None,
+        source: str = "text",
+        abstract: str | None = None,
+        published_at=None,
+        metadata: dict | None = None,
     ) -> uuid.UUID:
         existing = await self._repo.get_paper_by_external_id(external_id)
         if existing:
             paper = existing
+            paper.title = title
             paper.ingestion_status = "pending"
+            if authors is not None:
+                paper.authors = authors
+            if abstract is not None:
+                paper.abstract = abstract
+            if published_at is not None:
+                paper.published_at = published_at
+            if metadata:
+                paper.metadata_ = {**(paper.metadata_ or {}), **metadata}
+            paper.source = source
         else:
             paper = await self._repo.create_paper(
-                external_id=external_id, title=title, authors=authors, source="text"
+                external_id=external_id,
+                title=title,
+                authors=authors,
+                source=source,
+                abstract=abstract or text[:2000],
+                published_at=published_at,
+                metadata=metadata,
             )
 
         job = await self._repo.create_ingestion_job(paper.id)
@@ -119,14 +142,25 @@ class LiteratureIngestionPipeline:
             await self._repo.mark_ingestion_running(job.id)
             await self._session.commit()
 
-            parsed = ParsedPaper(title=title, text=text, page_count=1)
+            parsed = ParsedPaper(title=title, text=text, page_count=1, abstract=abstract)
             chunks = self._chunker.chunk_paper(parsed, external_id)
             embeddings = await self._embedder.embed_texts([c.content for c in chunks])
             count = await self._repo.replace_chunks(paper.id, chunks, embeddings)
             await self._repo.complete_ingestion(job.id, paper.id, count)
             await self._session.commit()
+            await self._run_metric_extraction(paper.id)
             return paper.id
         except Exception as exc:
             await self._repo.fail_ingestion(job.id, paper.id, str(exc))
             await self._session.commit()
             raise
+
+    async def _run_metric_extraction(self, paper_id: uuid.UUID) -> None:
+        try:
+            await self._metrics.extract_for_paper(paper_id)
+        except Exception as exc:
+            logger.error(
+                "metric_extraction_pipeline_failed",
+                paper_id=str(paper_id),
+                error=str(exc),
+            )

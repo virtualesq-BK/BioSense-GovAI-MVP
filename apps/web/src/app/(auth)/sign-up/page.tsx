@@ -7,8 +7,10 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { useLanguage } from '@/lib/i18n/language-provider';
 
 export default function SignUpPage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,7 +35,7 @@ export default function SignUpPage() {
       router.refresh();
       return;
     }
-    setMessage('확인 이메일을 발송했습니다. 메일함을 확인한 뒤 로그인하세요.');
+    setMessage(t('auth.confirmationEmailSent'));
     setLoading(false);
   }
 
@@ -41,14 +43,14 @@ export default function SignUpPage() {
     <div className="flex min-h-screen items-center justify-center bg-[var(--background)] p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>회원가입</CardTitle>
-          <CardDescription>Supabase Auth로 새 계정을 만듭니다.</CardDescription>
+          <CardTitle>{t('auth.signUp')}</CardTitle>
+          <CardDescription>{t('auth.signUp.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-sm font-medium" htmlFor="email">
-                이메일
+                {t('auth.email')}
               </label>
               <Input
                 id="email"
@@ -61,7 +63,7 @@ export default function SignUpPage() {
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium" htmlFor="password">
-                비밀번호
+                {t('auth.password')}
               </label>
               <Input
                 id="password"
@@ -76,13 +78,13 @@ export default function SignUpPage() {
             {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
             {message && <p className="text-sm text-emerald-600 dark:text-emerald-400">{message}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? '가입 중…' : '회원가입'}
+              {loading ? t('auth.signingUp') : t('auth.signUp')}
             </Button>
           </form>
           <p className="mt-6 text-center text-sm text-[var(--muted-foreground)]">
-            이미 계정이 있으신가요?{' '}
+            {t('auth.haveAccount')}{' '}
             <Link href="/sign-in" className="text-[var(--accent)] hover:underline">
-              로그인
+              {t('auth.signIn')}
             </Link>
           </p>
         </CardContent>

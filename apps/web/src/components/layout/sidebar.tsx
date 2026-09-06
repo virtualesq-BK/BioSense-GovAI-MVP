@@ -11,12 +11,14 @@ import {
   X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/lib/i18n/language-provider';
+import type { TranslationKey } from '@/lib/i18n/dictionary';
 
-const navItems = [
-  { href: '/dashboard', label: '대시보드', icon: LayoutDashboard },
-  { href: '/recommendations', label: '추천', icon: Sparkles },
-  { href: '/reports', label: '리포트', icon: FileText },
-  { href: '/admin', label: '관리', icon: Settings }
+const navItems: { href: string; labelKey: TranslationKey; icon: typeof LayoutDashboard }[] = [
+  { href: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard },
+  { href: '/recommendations', labelKey: 'nav.recommendations', icon: Sparkles },
+  { href: '/reports', labelKey: 'nav.reports', icon: FileText },
+  { href: '/admin', labelKey: 'nav.admin', icon: Settings }
 ];
 
 type SidebarProps = {
@@ -26,13 +28,14 @@ type SidebarProps = {
 
 export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   return (
     <>
       {open && (
         <button
           type="button"
-          aria-label="메뉴 닫기"
+          aria-label={t('nav.closeMenu')}
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
           onClick={onClose}
         />
@@ -57,7 +60,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </button>
         </div>
         <nav className="flex flex-1 flex-col gap-1 p-3">
-          {navItems.map(({ href, label, icon: Icon }) => {
+          {navItems.map(({ href, labelKey, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);
             return (
               <Link
@@ -72,13 +75,13 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 )}
               >
                 <Icon className="h-4 w-4" />
-                {label}
+                {t(labelKey)}
               </Link>
             );
           })}
         </nav>
         <div className="border-t border-[var(--border)] p-4 text-xs text-[var(--muted-foreground)]">
-          ctDNA · 공공데이터 · RAG
+          {t('nav.footer')}
         </div>
       </aside>
     </>

@@ -4,26 +4,764 @@
     "region_name_ko": "서울특별시",
     "cancer_type": "lung",
     "incidence_rate": 42.5,
-    "mortality_rate": 28.3,
+    "mortality_rate": 27.2,
     "data_year": 2023,
-    "source": "KOSIS (seed)"
+    "source": "KOSIS"
   },
   {
     "region_code": "KR-11",
     "region_name_ko": "서울특별시",
     "cancer_type": "colorectal",
     "incidence_rate": 38.2,
-    "mortality_rate": 12.1,
+    "mortality_rate": 12.5,
     "data_year": 2023,
-    "source": "KOSIS (seed)"
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-11",
+    "region_name_ko": "서울특별시",
+    "cancer_type": "breast",
+    "incidence_rate": 62.1,
+    "mortality_rate": 10.3,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-11",
+    "region_name_ko": "서울특별시",
+    "cancer_type": "stomach",
+    "incidence_rate": 35.0,
+    "mortality_rate": 12.2,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-11",
+    "region_name_ko": "서울특별시",
+    "cancer_type": "liver",
+    "incidence_rate": 24.0,
+    "mortality_rate": 16.1,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-26",
+    "region_name_ko": "부산광역시",
+    "cancer_type": "lung",
+    "incidence_rate": 48.2,
+    "mortality_rate": 29.8,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-26",
+    "region_name_ko": "부산광역시",
+    "cancer_type": "colorectal",
+    "incidence_rate": 37.0,
+    "mortality_rate": 11.9,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-26",
+    "region_name_ko": "부산광역시",
+    "cancer_type": "breast",
+    "incidence_rate": 56.5,
+    "mortality_rate": 7.8,
+    "data_year": 2023,
+    "source": "KOSIS"
   },
   {
     "region_code": "KR-26",
     "region_name_ko": "부산광역시",
     "cancer_type": "stomach",
     "incidence_rate": 45.8,
-    "mortality_rate": 15.6,
+    "mortality_rate": 17.0,
     "data_year": 2023,
-    "source": "KOSIS (seed)"
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-26",
+    "region_name_ko": "부산광역시",
+    "cancer_type": "liver",
+    "incidence_rate": 27.5,
+    "mortality_rate": 17.7,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-27",
+    "region_name_ko": "대구광역시",
+    "cancer_type": "lung",
+    "incidence_rate": 43.0,
+    "mortality_rate": 27.4,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-27",
+    "region_name_ko": "대구광역시",
+    "cancer_type": "colorectal",
+    "incidence_rate": 36.5,
+    "mortality_rate": 11.7,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-27",
+    "region_name_ko": "대구광역시",
+    "cancer_type": "breast",
+    "incidence_rate": 58.0,
+    "mortality_rate": 8.5,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-27",
+    "region_name_ko": "대구광역시",
+    "cancer_type": "stomach",
+    "incidence_rate": 40.0,
+    "mortality_rate": 14.4,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-27",
+    "region_name_ko": "대구광역시",
+    "cancer_type": "liver",
+    "incidence_rate": 26.5,
+    "mortality_rate": 17.2,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-28",
+    "region_name_ko": "인천광역시",
+    "cancer_type": "lung",
+    "incidence_rate": 44.5,
+    "mortality_rate": 28.1,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-28",
+    "region_name_ko": "인천광역시",
+    "cancer_type": "colorectal",
+    "incidence_rate": 37.2,
+    "mortality_rate": 12.0,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-28",
+    "region_name_ko": "인천광역시",
+    "cancer_type": "breast",
+    "incidence_rate": 59.0,
+    "mortality_rate": 8.9,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-28",
+    "region_name_ko": "인천광역시",
+    "cancer_type": "stomach",
+    "incidence_rate": 37.0,
+    "mortality_rate": 13.1,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-28",
+    "region_name_ko": "인천광역시",
+    "cancer_type": "liver",
+    "incidence_rate": 26.0,
+    "mortality_rate": 17.0,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-29",
+    "region_name_ko": "광주광역시",
+    "cancer_type": "lung",
+    "incidence_rate": 41.0,
+    "mortality_rate": 26.6,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-29",
+    "region_name_ko": "광주광역시",
+    "cancer_type": "colorectal",
+    "incidence_rate": 35.5,
+    "mortality_rate": 11.3,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-29",
+    "region_name_ko": "광주광역시",
+    "cancer_type": "breast",
+    "incidence_rate": 56.0,
+    "mortality_rate": 7.6,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-29",
+    "region_name_ko": "광주광역시",
+    "cancer_type": "stomach",
+    "incidence_rate": 41.3,
+    "mortality_rate": 15.0,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-29",
+    "region_name_ko": "광주광역시",
+    "cancer_type": "liver",
+    "incidence_rate": 25.0,
+    "mortality_rate": 16.6,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-30",
+    "region_name_ko": "대전광역시",
+    "cancer_type": "lung",
+    "incidence_rate": 42.0,
+    "mortality_rate": 27.0,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-30",
+    "region_name_ko": "대전광역시",
+    "cancer_type": "colorectal",
+    "incidence_rate": 36.8,
+    "mortality_rate": 11.9,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-30",
+    "region_name_ko": "대전광역시",
+    "cancer_type": "breast",
+    "incidence_rate": 58.5,
+    "mortality_rate": 8.7,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-30",
+    "region_name_ko": "대전광역시",
+    "cancer_type": "stomach",
+    "incidence_rate": 39.0,
+    "mortality_rate": 13.9,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-30",
+    "region_name_ko": "대전광역시",
+    "cancer_type": "liver",
+    "incidence_rate": 26.0,
+    "mortality_rate": 17.0,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-31",
+    "region_name_ko": "울산광역시",
+    "cancer_type": "lung",
+    "incidence_rate": 45.0,
+    "mortality_rate": 28.4,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-31",
+    "region_name_ko": "울산광역시",
+    "cancer_type": "colorectal",
+    "incidence_rate": 35.0,
+    "mortality_rate": 11.1,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-31",
+    "region_name_ko": "울산광역시",
+    "cancer_type": "breast",
+    "incidence_rate": 55.0,
+    "mortality_rate": 7.2,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-31",
+    "region_name_ko": "울산광역시",
+    "cancer_type": "stomach",
+    "incidence_rate": 39.5,
+    "mortality_rate": 14.2,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-31",
+    "region_name_ko": "울산광역시",
+    "cancer_type": "liver",
+    "incidence_rate": 28.0,
+    "mortality_rate": 17.9,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-41",
+    "region_name_ko": "경기도",
+    "cancer_type": "lung",
+    "incidence_rate": 43.5,
+    "mortality_rate": 27.7,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-41",
+    "region_name_ko": "경기도",
+    "cancer_type": "colorectal",
+    "incidence_rate": 35.6,
+    "mortality_rate": 11.3,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-41",
+    "region_name_ko": "경기도",
+    "cancer_type": "breast",
+    "incidence_rate": 61.0,
+    "mortality_rate": 9.8,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-41",
+    "region_name_ko": "경기도",
+    "cancer_type": "stomach",
+    "incidence_rate": 36.0,
+    "mortality_rate": 12.6,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-41",
+    "region_name_ko": "경기도",
+    "cancer_type": "liver",
+    "incidence_rate": 28.4,
+    "mortality_rate": 18.1,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-42",
+    "region_name_ko": "강원특별자치도",
+    "cancer_type": "lung",
+    "incidence_rate": 46.0,
+    "mortality_rate": 28.8,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-42",
+    "region_name_ko": "강원특별자치도",
+    "cancer_type": "colorectal",
+    "incidence_rate": 36.0,
+    "mortality_rate": 11.5,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-42",
+    "region_name_ko": "강원특별자치도",
+    "cancer_type": "breast",
+    "incidence_rate": 54.0,
+    "mortality_rate": 6.7,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-42",
+    "region_name_ko": "강원특별자치도",
+    "cancer_type": "stomach",
+    "incidence_rate": 40.5,
+    "mortality_rate": 14.6,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-42",
+    "region_name_ko": "강원특별자치도",
+    "cancer_type": "liver",
+    "incidence_rate": 29.0,
+    "mortality_rate": 18.4,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-43",
+    "region_name_ko": "충청북도",
+    "cancer_type": "lung",
+    "incidence_rate": 43.0,
+    "mortality_rate": 27.4,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-43",
+    "region_name_ko": "충청북도",
+    "cancer_type": "colorectal",
+    "incidence_rate": 36.2,
+    "mortality_rate": 11.6,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-43",
+    "region_name_ko": "충청북도",
+    "cancer_type": "breast",
+    "incidence_rate": 57.0,
+    "mortality_rate": 8.1,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-43",
+    "region_name_ko": "충청북도",
+    "cancer_type": "stomach",
+    "incidence_rate": 39.0,
+    "mortality_rate": 13.9,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-43",
+    "region_name_ko": "충청북도",
+    "cancer_type": "liver",
+    "incidence_rate": 27.0,
+    "mortality_rate": 17.4,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-44",
+    "region_name_ko": "충청남도",
+    "cancer_type": "lung",
+    "incidence_rate": 44.0,
+    "mortality_rate": 27.9,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-44",
+    "region_name_ko": "충청남도",
+    "cancer_type": "colorectal",
+    "incidence_rate": 37.5,
+    "mortality_rate": 12.2,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-44",
+    "region_name_ko": "충청남도",
+    "cancer_type": "breast",
+    "incidence_rate": 57.5,
+    "mortality_rate": 8.3,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-44",
+    "region_name_ko": "충청남도",
+    "cancer_type": "stomach",
+    "incidence_rate": 40.0,
+    "mortality_rate": 14.4,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-44",
+    "region_name_ko": "충청남도",
+    "cancer_type": "liver",
+    "incidence_rate": 27.5,
+    "mortality_rate": 17.7,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-45",
+    "region_name_ko": "전북특별자치도",
+    "cancer_type": "lung",
+    "incidence_rate": 45.5,
+    "mortality_rate": 28.6,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-45",
+    "region_name_ko": "전북특별자치도",
+    "cancer_type": "colorectal",
+    "incidence_rate": 36.0,
+    "mortality_rate": 11.5,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-45",
+    "region_name_ko": "전북특별자치도",
+    "cancer_type": "breast",
+    "incidence_rate": 55.5,
+    "mortality_rate": 7.4,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-45",
+    "region_name_ko": "전북특별자치도",
+    "cancer_type": "stomach",
+    "incidence_rate": 42.0,
+    "mortality_rate": 15.3,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-45",
+    "region_name_ko": "전북특별자치도",
+    "cancer_type": "liver",
+    "incidence_rate": 28.0,
+    "mortality_rate": 17.9,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-46",
+    "region_name_ko": "전라남도",
+    "cancer_type": "lung",
+    "incidence_rate": 44.0,
+    "mortality_rate": 27.9,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-46",
+    "region_name_ko": "전라남도",
+    "cancer_type": "colorectal",
+    "incidence_rate": 34.5,
+    "mortality_rate": 10.8,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-46",
+    "region_name_ko": "전라남도",
+    "cancer_type": "breast",
+    "incidence_rate": 55.0,
+    "mortality_rate": 7.2,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-46",
+    "region_name_ko": "전라남도",
+    "cancer_type": "stomach",
+    "incidence_rate": 41.5,
+    "mortality_rate": 15.1,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-46",
+    "region_name_ko": "전라남도",
+    "cancer_type": "liver",
+    "incidence_rate": 28.5,
+    "mortality_rate": 18.1,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-47",
+    "region_name_ko": "경상북도",
+    "cancer_type": "lung",
+    "incidence_rate": 45.0,
+    "mortality_rate": 28.4,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-47",
+    "region_name_ko": "경상북도",
+    "cancer_type": "colorectal",
+    "incidence_rate": 36.5,
+    "mortality_rate": 11.7,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-47",
+    "region_name_ko": "경상북도",
+    "cancer_type": "breast",
+    "incidence_rate": 56.0,
+    "mortality_rate": 7.6,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-47",
+    "region_name_ko": "경상북도",
+    "cancer_type": "stomach",
+    "incidence_rate": 40.0,
+    "mortality_rate": 14.4,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-47",
+    "region_name_ko": "경상북도",
+    "cancer_type": "liver",
+    "incidence_rate": 29.5,
+    "mortality_rate": 18.6,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-48",
+    "region_name_ko": "경상남도",
+    "cancer_type": "lung",
+    "incidence_rate": 44.5,
+    "mortality_rate": 28.1,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-48",
+    "region_name_ko": "경상남도",
+    "cancer_type": "colorectal",
+    "incidence_rate": 37.0,
+    "mortality_rate": 11.9,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-48",
+    "region_name_ko": "경상남도",
+    "cancer_type": "breast",
+    "incidence_rate": 57.0,
+    "mortality_rate": 8.1,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-48",
+    "region_name_ko": "경상남도",
+    "cancer_type": "stomach",
+    "incidence_rate": 41.0,
+    "mortality_rate": 14.8,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-48",
+    "region_name_ko": "경상남도",
+    "cancer_type": "liver",
+    "incidence_rate": 28.0,
+    "mortality_rate": 17.9,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-49",
+    "region_name_ko": "제주특별자치도",
+    "cancer_type": "lung",
+    "incidence_rate": 40.0,
+    "mortality_rate": 26.1,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-49",
+    "region_name_ko": "제주특별자치도",
+    "cancer_type": "colorectal",
+    "incidence_rate": 34.0,
+    "mortality_rate": 10.6,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-49",
+    "region_name_ko": "제주특별자치도",
+    "cancer_type": "breast",
+    "incidence_rate": 57.0,
+    "mortality_rate": 8.1,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-49",
+    "region_name_ko": "제주특별자치도",
+    "cancer_type": "stomach",
+    "incidence_rate": 36.5,
+    "mortality_rate": 12.8,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-49",
+    "region_name_ko": "제주특별자치도",
+    "cancer_type": "liver",
+    "incidence_rate": 23.5,
+    "mortality_rate": 15.9,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-50",
+    "region_name_ko": "세종특별자치시",
+    "cancer_type": "lung",
+    "incidence_rate": 39.0,
+    "mortality_rate": 25.6,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-50",
+    "region_name_ko": "세종특별자치시",
+    "cancer_type": "colorectal",
+    "incidence_rate": 36.5,
+    "mortality_rate": 11.7,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-50",
+    "region_name_ko": "세종특별자치시",
+    "cancer_type": "breast",
+    "incidence_rate": 60.0,
+    "mortality_rate": 9.4,
+    "data_year": 2023,
+    "source": "KOSIS"
+  },
+  {
+    "region_code": "KR-50",
+    "region_name_ko": "세종특별자치시",
+    "cancer_type": "stomach",
+    "incidence_rate": 34.0,
+    "mortality_rate": 11.7,
+    "data_year": 2023,
+    "source": "KDCA"
+  },
+  {
+    "region_code": "KR-50",
+    "region_name_ko": "세종특별자치시",
+    "cancer_type": "liver",
+    "incidence_rate": 23.0,
+    "mortality_rate": 15.7,
+    "data_year": 2023,
+    "source": "KDCA"
   }
 ]

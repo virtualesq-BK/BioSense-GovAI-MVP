@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from biosense.application.services.recommendation_engine_service import RecommendationEngineService
-from biosense.domain.entities.recommendation import RecommendationInput, ScoredCandidate
+from biosense.domain.entities.recommendation import PublicHealthSnapshot, RecommendationInput, ScoredCandidate
 from tests.unit.test_weighted_ranker import _sample_candidate
 
 
@@ -25,6 +25,18 @@ def _mock_scored(sensor_type: str, recognition: str) -> ScoredCandidate:
     )
 
 
+def _ph_snapshot() -> PublicHealthSnapshot:
+    return PublicHealthSnapshot(
+        incidence_rate=42.5,
+        mortality_rate=28.3,
+        public_health_score=0.7,
+        national_incidence_avg=40.0,
+        national_mortality_avg=26.0,
+        region_name_ko="서울특별시",
+        region_code="KR-11",
+    )
+
+
 @pytest.mark.asyncio
 async def test_recommendation_engine_returns_structured_output() -> None:
     session = MagicMock()
@@ -35,7 +47,7 @@ async def test_recommendation_engine_returns_structured_output() -> None:
             engine._public_health,
             "fetch_features",
             new_callable=AsyncMock,
-            return_value=(42.5, 28.3, 0.7),
+            return_value=_ph_snapshot(),
         ),
         patch.object(
             engine._graph,
@@ -65,7 +77,8 @@ async def test_recommendation_engine_returns_structured_output() -> None:
     assert recs[0].recognition_strategy == "aptamer_based"
     assert recs[0].expected_metrics.sensitivity > 0
     assert recs[0].experimental_protocol["steps"]
-
+    assert "narrative" in recs[0].evidence["public_health"]
+    assert "서울특별시" in recs[0].evidence["public_health"]["narrative"]
 
 @pytest.mark.asyncio
 async def test_recommendation_benchmark_hit_rate() -> None:

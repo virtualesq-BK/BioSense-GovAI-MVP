@@ -72,12 +72,15 @@ class WeightedRanker:
 class ConfidenceScorer:
     """Derive confidence from evidence breadth and score consistency."""
 
+    CONFLICT_PENALTY = 0.12
+
     @staticmethod
     def compute(
         candidate: GraphCandidate,
         *,
         literature_score: float,
         composite_score: float,
+        conflicting_sources: bool | None = None,
     ) -> float:
         evidence_signals = [
             candidate.match_score,
@@ -88,6 +91,13 @@ class ConfidenceScorer:
         ]
         avg_evidence = sum(evidence_signals) / len(evidence_signals)
         confidence = 0.6 * composite_score + 0.4 * avg_evidence
+        has_conflict = (
+            conflicting_sources
+            if conflicting_sources is not None
+            else candidate.conflicting_sources
+        )
+        if has_conflict:
+            confidence -= ConfidenceScorer.CONFLICT_PENALTY
         return round(min(max(confidence, 0.0), 1.0), 4)
 
 

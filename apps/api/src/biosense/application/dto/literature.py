@@ -10,6 +10,9 @@ class PaperSummary(BaseModel):
     chunk_count: int
     pdf_filename: str | None
     created_at: str
+    authors: list[str] | None = None
+    abstract: str | None = None
+    metadata: dict = Field(default_factory=dict)
 
 
 class LiteratureIngestionStatus(BaseModel):

@@ -6,13 +6,15 @@ import structlog
 from sqlalchemy import delete, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from biosense.domain.entities.literature import RetrievedChunk, TextChunk
+from biosense.domain.entities.literature import ExtractedMetric, RetrievedChunk, TextChunk
 from biosense.infrastructure.persistence.postgres.models import (
     LiteratureIngestionJob,
     Paper,
     PaperChunk,
     RagEvaluation,
     RagQueryLog,
+    Sensor,
+    SensorPerformance,
 )
 
 logger = structlog.get_logger()
@@ -31,6 +33,8 @@ class LiteratureRepository:
         authors: list[str] | None = None,
         pdf_filename: str | None = None,
         abstract: str | None = None,
+        published_at=None,
+        metadata: dict | None = None,
     ) -> Paper:
         paper = Paper(
             external_id=external_id,
@@ -39,6 +43,8 @@ class LiteratureRepository:
             authors=authors,
             pdf_filename=pdf_filename,
             abstract=abstract,
+            published_at=published_at,
+            metadata_=metadata or {},
             ingestion_status="pending",
         )
         self._session.add(paper)
@@ -236,3 +242,128 @@ class LiteratureRepository:
             .limit(limit)
         )
         return list(result.scalars().all())
+
+    async def list_paper_chunk_texts(self, paper_id: uuid.UUID) -> list[str]:
+        result = await self._session.execute(
+            select(PaperChunk.content)
+            .where(PaperChunk.paper_id == paper_id)
+            .order_by(PaperChunk.chunk_index)
+        )
+        return [row[0] for row in result.all() if row[0]]
+
+    async def list_sensors(self) -> list[dict]:
+        result = await self._session.execute(select(Sensor.id, Sensor.name, Sensor.sensor_type))
+        return [
+            {"id": row.id, "name": row.name, "sensor_type": row.sensor_type}
+            for row in result.all()
+        ]
+
+    async def upsert_extracted_performance(
+        self,
+        *,
+        sensor_id: uuid.UUID,
+        paper_id: uuid.UUID,
+        metric: ExtractedMetric,
+    ) -> SensorPerformance:
+        result = await self._session.execute(
+            select(SensorPerformance).where(
+                SensorPerformance.sensor_id == sensor_id,
+                SensorPerformance.source_paper_id == paper_id,
+            )
+        )
+        row = result.scalar_one_or_none()
+        if row is None:
+            row = SensorPerformance(
+                sensor_id=sensor_id,
+                source_paper_id=paper_id,
+                is_estimated=False,
+                conflicting_sources=False,
+            )
+            self._session.add(row)
+
+        row.sensitivity = _dec(metric.sensitivity)
+        row.specificity = _dec(metric.specificity)
+        row.auc = _dec(metric.auc)
+        row.lod_value = _dec(metric.lod_value)
+        row.lod_unit = metric.lod_unit
+        row.assay_time_minutes = _dec(metric.assay_time_minutes)
+        row.sample_volume = _dec(metric.sample_volume)
+        row.sample_volume_unit = metric.sample_volume_unit
+        row.estimated_cost_usd = _dec(metric.estimated_cost_usd)
+        row.extraction_confidence = _dec(metric.extraction_confidence)
+        row.is_estimated = metric.is_estimated
+        row.source_excerpt = metric.source_excerpt or None
+        row.source = "literature_extraction"
+        row.assay_conditions = metric.source_excerpt[:500] if metric.source_excerpt else None
+
+        await self._session.flush()
+        await self._mark_conflicting_sources(sensor_id, row)
+        await self._session.flush()
+        return row
+
+    async def _mark_conflicting_sources(
+        self, sensor_id: uuid.UUID, current: SensorPerformance
+    ) -> None:
+        """Flag performances when literature values materially disagree."""
+        result = await self._session.execute(
+            select(SensorPerformance).where(
+                SensorPerformance.sensor_id == sensor_id,
+                SensorPerformance.source_paper_id.is_not(None),
+            )
+        )
+        rows = list(result.scalars().all())
+        if len(rows) < 2:
+            current.conflicting_sources = False
+            return
+
+        conflict = False
+        for other in rows:
+            if other.id == current.id:
+                continue
+            if _metrics_conflict(current, other):
+                conflict = True
+                other.conflicting_sources = True
+
+        current.conflicting_sources = conflict
+        if conflict:
+            logger.info(
+                "sensor_performance_conflict_flagged",
+                sensor_id=str(sensor_id),
+                performance_id=str(current.id),
+            )
+
+
+def _dec(value: float | None):
+    from decimal import Decimal
+
+    if value is None:
+        return None
+    return Decimal(str(round(value, 6)))
+
+
+def _metrics_conflict(a: SensorPerformance, b: SensorPerformance) -> bool:
+    """True when key metrics differ beyond tolerance across papers."""
+    pairs = [
+        (a.sensitivity, b.sensitivity, 0.08),
+        (a.specificity, b.specificity, 0.08),
+        (a.auc, b.auc, 0.08),
+    ]
+    for left, right, tol in pairs:
+        if left is None or right is None:
+            continue
+        if abs(float(left) - float(right)) > tol:
+            return True
+
+    if (
+        a.lod_value is not None
+        and b.lod_value is not None
+        and a.lod_unit
+        and b.lod_unit
+        and a.lod_unit.lower() == b.lod_unit.lower()
+    ):
+        av, bv = float(a.lod_value), float(b.lod_value)
+        if av > 0 and bv > 0:
+            ratio = max(av, bv) / min(av, bv)
+            if ratio >= 5.0:
+                return True
+    return False

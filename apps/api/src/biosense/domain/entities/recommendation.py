@@ -24,6 +24,24 @@ class ExtractedFeatures:
     public_health_score: float
     query_text: str
     biomarker_hints: list[str] = field(default_factory=list)
+    public_health_narrative: str = ""
+    national_incidence_avg: float | None = None
+    national_mortality_avg: float | None = None
+    region_name_ko: str | None = None
+
+
+@dataclass(frozen=True)
+class PublicHealthSnapshot:
+    """Regional rates plus national aggregates for narrative templates."""
+
+    incidence_rate: float | None
+    mortality_rate: float | None
+    public_health_score: float
+    national_incidence_avg: float | None = None
+    national_mortality_avg: float | None = None
+    region_name_ko: str | None = None
+    region_code: str = ""
+
 
 
 @dataclass(frozen=True)
@@ -45,6 +63,7 @@ class GraphCandidate:
     estimated_cost_usd: float | None
     protocol_steps: list[str]
     graph_path: str
+    conflicting_sources: bool = False
 
 
 @dataclass

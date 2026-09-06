@@ -1,9 +1,10 @@
 import structlog
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from biosense.domain.entities.recommendation import ExtractedFeatures, GraphCandidate
+from biosense.domain.entities.recommendation import ExtractedFeatures, GraphCandidate, PublicHealthSnapshot
+from biosense.infrastructure.external.seed_loader import KR_REGIONS
 from biosense.infrastructure.persistence.postgres.models import (
     Biomarker,
     BiomarkerRecognitionMatch,
@@ -31,7 +32,7 @@ class GraphRetrievalService:
         self, features: ExtractedFeatures, limit: int = 20
     ) -> list[GraphCandidate]:
         cancer_id = await self._session.scalar(
-            select(Cancer.id).where(Cancer.code == features.cancer_type)
+            select(Cancer.id).where(Cancer.code == _normalize_cancer_code(features.cancer_type))
         )
         if not cancer_id:
             logger.warning("cancer_not_found", cancer_type=features.cancer_type)
@@ -111,9 +112,14 @@ class GraphRetrievalService:
                     lod_unit=perf.lod_unit if perf else None,
                     estimated_cost_usd=float(sensor.estimated_cost_usd)
                     if sensor.estimated_cost_usd
-                    else None,
+                    else (
+                        float(perf.estimated_cost_usd)
+                        if perf and perf.estimated_cost_usd is not None
+                        else None
+                    ),
                     protocol_steps=protocol.steps if protocol else [],
                     graph_path=path,
+                    conflicting_sources=bool(perf.conflicting_sources) if perf else False,
                 )
             )
         return candidates
@@ -140,17 +146,23 @@ class PublicHealthFeatureService:
 
     async def fetch_features(
         self, cancer_type: str, region_code: str
-    ) -> tuple[float | None, float | None, float]:
-        cancer_id = await self._session.scalar(
-            select(Cancer.id).where(Cancer.code == cancer_type)
-        )
+    ) -> PublicHealthSnapshot:
+        code = _normalize_cancer_code(cancer_type)
+        region = _normalize_region_code(region_code)
+
+        cancer_id = await self._session.scalar(select(Cancer.id).where(Cancer.code == code))
         if not cancer_id:
-            return None, None, 0.5
+            return PublicHealthSnapshot(
+                incidence_rate=None,
+                mortality_rate=None,
+                public_health_score=0.5,
+                region_code=region,
+            )
 
         result = await self._session.execute(
             select(PublicHealthFeature).where(
                 PublicHealthFeature.cancer_id == cancer_id,
-                PublicHealthFeature.region_code == region_code,
+                PublicHealthFeature.region_code == region,
             )
         )
         features = list(result.scalars().all())
@@ -160,7 +172,35 @@ class PublicHealthFeatureService:
         inc_val = float(incidence.value) if incidence else None
         mort_val = float(mortality.value) if mortality else None
         score = _public_health_score(inc_val, mort_val)
-        return inc_val, mort_val, score
+
+        national_inc = await self._session.scalar(
+            select(func.avg(PublicHealthFeature.value)).where(
+                PublicHealthFeature.cancer_id == cancer_id,
+                PublicHealthFeature.feature_type == "incidence",
+            )
+        )
+        national_mort = await self._session.scalar(
+            select(func.avg(PublicHealthFeature.value)).where(
+                PublicHealthFeature.cancer_id == cancer_id,
+                PublicHealthFeature.feature_type == "mortality",
+            )
+        )
+
+        region_name = None
+        if features:
+            region_name = features[0].region_name_ko
+        if not region_name:
+            region_name = _region_name_ko(region)
+
+        return PublicHealthSnapshot(
+            incidence_rate=inc_val,
+            mortality_rate=mort_val,
+            public_health_score=score,
+            national_incidence_avg=round(float(national_inc), 2) if national_inc is not None else None,
+            national_mortality_avg=round(float(national_mort), 2) if national_mort is not None else None,
+            region_name_ko=region_name,
+            region_code=region,
+        )
 
 
 def _public_health_score(incidence: float | None, mortality: float | None) -> float:
@@ -168,3 +208,30 @@ def _public_health_score(incidence: float | None, mortality: float | None) -> fl
         return 0.5
     raw = (incidence or 0) / 100.0 + (mortality or 0) / 100.0
     return round(min(max(raw, 0.0), 1.0), 4)
+
+
+def _normalize_region_code(region_code: str) -> str:
+    code = (region_code or "").strip()
+    if code.startswith("KR-"):
+        return code
+    if code.isdigit():
+        return f"KR-{code.zfill(2)}"
+    return code
+
+
+def _normalize_cancer_code(cancer_type: str) -> str:
+    aliases = {
+        "CRC": "colorectal",
+        "LUNG": "lung",
+        "BREAST": "breast",
+        "LIVER": "liver",
+        "STOMACH": "stomach",
+    }
+    return aliases.get(cancer_type, cancer_type.lower() if cancer_type.isupper() else cancer_type)
+
+
+def _region_name_ko(region_code: str) -> str | None:
+    for row in KR_REGIONS:
+        if row["code"] == region_code:
+            return row["name_ko"]
+    return None

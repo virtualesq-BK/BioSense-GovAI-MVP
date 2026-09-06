@@ -24,6 +24,7 @@ tags:
   - name: Biomarker Cases
   - name: Recommendations
   - name: Public Data
+  - name: Ingestion
   - name: Knowledge Graph
 
 security:
@@ -227,6 +228,32 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
+
+  /v1/ingestion/literature/harvest:
+    post:
+      tags: [Ingestion]
+      summary: Harvest PubMed literature and ingest into RAG store
+      description: |
+        Searches NCBI PubMed via E-utilities (esearch + efetch) using default
+        biosensor/ctDNA queries (or custom queries), then ingests abstracts
+        through the literature text ingestion pipeline.
+      operationId: harvestLiterature
+      security: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HarvestLiteratureRequest"
+      responses:
+        "200":
+          description: Harvest completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HarvestLiteratureResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
   /v1/knowledge-graph/search:
     post:
@@ -434,6 +461,9 @@ components:
         - methylation
         - mutation
         - cnv
+        - exosomal_mirna
+        - ctc
+        - multi_omics
 
     BiomarkerCaseStatus:
       type: string
@@ -705,6 +735,42 @@ components:
         source:
           type: string
           example: KOSIS
+
+    HarvestLiteratureRequest:
+      type: object
+      properties:
+        queries:
+          type: array
+          description: Optional custom PubMed search terms. Defaults to built-in biosensor/ctDNA queries.
+          items:
+            type: string
+            minLength: 2
+          maxItems: 10
+        max_results_per_query:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+
+    HarvestLiteratureResponse:
+      type: object
+      required: [harvested, skipped, failed, paper_ids, message]
+      properties:
+        harvested:
+          type: integer
+          description: Newly ingested papers
+        skipped:
+          type: integer
+          description: Papers skipped (already indexed or empty abstract)
+        failed:
+          type: integer
+        paper_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        message:
+          type: string
 
     KnowledgeGraphSearchRequest:
       type: object

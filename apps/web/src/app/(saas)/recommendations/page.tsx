@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FileDown, Sparkles } from 'lucide-react';
+import { BookOpen, FileDown, Sparkles } from 'lucide-react';
 import { PageLayout } from '@/components/layout/page-layout';
 import { LoadingOverlay } from '@/components/common/loading';
+import { CitationDrawer } from '@/components/features/literature/citation-drawer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,19 +22,44 @@ import {
 import { formatCurrency, formatPercent } from '@/lib/utils';
 import { saveReport } from '@/lib/reports-store';
 import { exportReportToPdf } from '@/lib/pdf-export';
+import { useLanguage } from '@/lib/i18n/language-provider';
+import type { Locale } from '@/lib/i18n/dictionary';
 
-const CANCER_TYPES = [
-  { value: 'CRC', label: '대장암 (CRC)' },
-  { value: 'LUNG', label: '폐암 (LUNG)' },
-  { value: 'BREAST', label: '유방암 (BREAST)' },
-  { value: 'LIVER', label: '간암 (LIVER)' }
-];
+const CANCER_TYPES: Record<Locale, { value: string; label: string }[]> = {
+  ko: [
+    { value: 'CRC', label: '대장암 (CRC)' },
+    { value: 'LUNG', label: '폐암 (LUNG)' },
+    { value: 'BREAST', label: '유방암 (BREAST)' },
+    { value: 'LIVER', label: '간암 (LIVER)' }
+  ],
+  en: [
+    { value: 'CRC', label: 'Colorectal Cancer (CRC)' },
+    { value: 'LUNG', label: 'Lung Cancer (LUNG)' },
+    { value: 'BREAST', label: 'Breast Cancer (BREAST)' },
+    { value: 'LIVER', label: 'Liver Cancer (LIVER)' }
+  ]
+};
 
-const CTDNA_CLASSES = [
-  { value: 'mutation', label: '돌연변이 (Mutation)' },
-  { value: 'methylation', label: '메틸화 (Methylation)' },
-  { value: 'fragmentomics', label: '프래그먼토믹스' }
-];
+const CTDNA_CLASSES: Record<Locale, { value: string; label: string }[]> = {
+  ko: [
+    { value: 'mutation', label: '돌연변이 (Mutation)' },
+    { value: 'methylation', label: '메틸화 (Methylation)' },
+    { value: 'fragmentomics', label: '프래그먼토믹스' },
+    { value: 'cnv', label: 'CNV' },
+    { value: 'exosomal_mirna', label: '엑소좀 miRNA' },
+    { value: 'ctc', label: 'CTC' },
+    { value: 'multi_omics', label: '다중오믹스 패널' }
+  ],
+  en: [
+    { value: 'mutation', label: 'Mutation' },
+    { value: 'methylation', label: 'Methylation' },
+    { value: 'fragmentomics', label: 'Fragmentomics' },
+    { value: 'cnv', label: 'CNV' },
+    { value: 'exosomal_mirna', label: 'Exosomal miRNA' },
+    { value: 'ctc', label: 'CTC' },
+    { value: 'multi_omics', label: 'Multi-omics Panel' }
+  ]
+};
 
 const DEFAULT_FORM: GenerateRecommendationRequest = {
   cancer_type: 'CRC',
@@ -46,6 +72,7 @@ const DEFAULT_FORM: GenerateRecommendationRequest = {
 
 export default function RecommendationsPage() {
   const router = useRouter();
+  const { t, locale } = useLanguage();
   const [form, setForm] = useState<GenerateRecommendationRequest>(DEFAULT_FORM);
   const [regions, setRegions] = useState<Region[]>([]);
   const [results, setResults] = useState<SensorRecommendation[]>([]);
@@ -63,12 +90,12 @@ export default function RecommendationsPage() {
       const res = await recommendationsApi.generate(form);
       setResults(res.recommendations);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '추천 생성 실패');
+      setError(e instanceof Error ? e.message : t('recommendations.error.generateFailed'));
       setResults([]);
     } finally {
       setLoading(false);
     }
-  }, [form]);
+  }, [form, t]);
 
   function handleSaveReport() {
     if (!results.length) return;
@@ -78,12 +105,15 @@ export default function RecommendationsPage() {
 
   function handleExportPdf() {
     if (!results.length) return;
-    exportReportToPdf({
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-      input: form,
-      recommendations: results
-    });
+    exportReportToPdf(
+      {
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+        input: form,
+        recommendations: results
+      },
+      locale
+    );
   }
 
   const chartData = results.map((r) => ({
@@ -93,17 +123,17 @@ export default function RecommendationsPage() {
 
   return (
     <PageLayout
-      title="센서 추천"
-      description="바이오마커·ctDNA 조건에 맞는 바이오센서 전략 생성"
+      title={t('recommendations.title')}
+      description={t('recommendations.description')}
       actions={
         results.length > 0 && (
           <>
             <Button variant="outline" size="sm" onClick={handleExportPdf}>
               <FileDown className="h-4 w-4" />
-              PDF
+              {t('recommendations.pdf')}
             </Button>
             <Button size="sm" onClick={handleSaveReport}>
-              리포트 저장
+              {t('recommendations.saveReport')}
             </Button>
           </>
         )
@@ -112,35 +142,35 @@ export default function RecommendationsPage() {
       <div className="grid gap-6 lg:grid-cols-5">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>케이스 입력</CardTitle>
-            <CardDescription>암종, ctDNA 분류, 지역, 바이오마커를 설정하세요.</CardDescription>
+            <CardTitle>{t('recommendations.caseInput')}</CardTitle>
+            <CardDescription>{t('recommendations.caseInput.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Field label="암종">
+            <Field label={t('recommendations.field.cancerType')}>
               <Select
                 value={form.cancer_type}
                 onChange={(e) => setForm((f) => ({ ...f, cancer_type: e.target.value }))}
               >
-                {CANCER_TYPES.map((c) => (
+                {CANCER_TYPES[locale].map((c) => (
                   <option key={c.value} value={c.value}>
                     {c.label}
                   </option>
                 ))}
               </Select>
             </Field>
-            <Field label="ctDNA 분류">
+            <Field label={t('recommendations.field.ctdnaClass')}>
               <Select
                 value={form.ctdna_class}
                 onChange={(e) => setForm((f) => ({ ...f, ctdna_class: e.target.value }))}
               >
-                {CTDNA_CLASSES.map((c) => (
+                {CTDNA_CLASSES[locale].map((c) => (
                   <option key={c.value} value={c.value}>
                     {c.label}
                   </option>
                 ))}
               </Select>
             </Field>
-            <Field label="지역">
+            <Field label={t('recommendations.field.region')}>
               <Select
                 value={form.region_code}
                 onChange={(e) => setForm((f) => ({ ...f, region_code: e.target.value }))}
@@ -152,11 +182,11 @@ export default function RecommendationsPage() {
                     </option>
                   ))
                 ) : (
-                  <option value="11">서울 (11)</option>
+                  <option value="11">{t('recommendations.seoul')}</option>
                 )}
               </Select>
             </Field>
-            <Field label="환자 연령">
+            <Field label={t('recommendations.field.patientAge')}>
               <Input
                 type="number"
                 min={0}
@@ -167,14 +197,14 @@ export default function RecommendationsPage() {
                 }
               />
             </Field>
-            <Field label="바이오마커 (선택)">
+            <Field label={t('recommendations.field.biomarker')}>
               <Input
                 value={form.biomarker_name ?? ''}
                 onChange={(e) => setForm((f) => ({ ...f, biomarker_name: e.target.value }))}
-                placeholder="예: KRAS G12D"
+                placeholder="e.g. KRAS G12D"
               />
             </Field>
-            <Field label="Top-K">
+            <Field label={t('recommendations.field.topK')}>
               <Input
                 type="number"
                 min={1}
@@ -188,20 +218,20 @@ export default function RecommendationsPage() {
             )}
             <Button className="w-full gap-2" onClick={handleGenerate} disabled={loading}>
               <Sparkles className="h-4 w-4" />
-              추천 생성
+              {t('recommendations.generate')}
             </Button>
           </CardContent>
         </Card>
 
         <div className="relative space-y-6 lg:col-span-3">
-          {loading && <LoadingOverlay label="하이브리드 검색 중…" />}
+          {loading && <LoadingOverlay label={t('recommendations.loading')} />}
           {results.length === 0 && !loading ? (
             <Card>
               <CardContent className="flex min-h-[400px] flex-col items-center justify-center text-center">
                 <Sparkles className="mb-4 h-10 w-10 text-[var(--muted-foreground)]" />
-                <p className="font-medium">추천 결과가 여기에 표시됩니다</p>
+                <p className="font-medium">{t('recommendations.empty.title')}</p>
                 <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                  케이스를 입력하고 추천 생성을 클릭하세요.
+                  {t('recommendations.empty.description')}
                 </p>
               </CardContent>
             </Card>
@@ -210,7 +240,7 @@ export default function RecommendationsPage() {
               {chartData.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>신뢰도 비교</CardTitle>
+                    <CardTitle>{t('recommendations.confidenceComparison')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <MetricsBarChart data={chartData} dataKey="value" xKey="label" />
@@ -218,7 +248,7 @@ export default function RecommendationsPage() {
                 </Card>
               )}
               {results.map((rec) => (
-                <RecommendationCard key={rec.rank} rec={rec} />
+                <RecommendationCard key={rec.rank} rec={rec} t={t} />
               ))}
             </>
           )}
@@ -237,32 +267,65 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function RecommendationCard({ rec }: { rec: SensorRecommendation }) {
+function RecommendationCard({
+  rec,
+  t
+}: {
+  rec: SensorRecommendation;
+  t: ReturnType<typeof useLanguage>['t'];
+}) {
   const m = rec.expected_metrics;
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const literatureCount = rec.evidence?.literature_ids?.length ?? 0;
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <Badge>#{rec.rank}</Badge>
-            <CardTitle className="text-base">{rec.sensor_name}</CardTitle>
+    <>
+      <Card>
+        <CardHeader className="flex flex-row items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <Badge>#{rec.rank}</Badge>
+              <CardTitle className="text-base">{rec.sensor_name}</CardTitle>
+            </div>
+            <CardDescription className="mt-1">
+              {rec.recognition_name} · {rec.biomarker_name}
+            </CardDescription>
           </div>
-          <CardDescription className="mt-1">
-            {rec.recognition_name} · {rec.biomarker_name}
-          </CardDescription>
-        </div>
-        <Badge variant="success">신뢰도 {formatPercent(rec.confidence_score)}</Badge>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-sm leading-relaxed text-[var(--muted-foreground)]">{rec.rationale}</p>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <MetricPill label="민감도" value={formatPercent(m.sensitivity)} />
-          <MetricPill label="특이도" value={formatPercent(m.specificity)} />
-          <MetricPill label="LOD" value={`${m.lod_value} ${m.lod_unit}`} />
-          <MetricPill label="예상 비용" value={formatCurrency(m.estimated_cost_usd)} />
-        </div>
-      </CardContent>
-    </Card>
+          <Badge variant="success">
+            {t('recommendations.confidence')} {formatPercent(rec.confidence_score)}
+          </Badge>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm leading-relaxed text-[var(--muted-foreground)]">{rec.rationale}</p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <MetricPill label={t('recommendations.metric.sensitivity')} value={formatPercent(m.sensitivity)} />
+            <MetricPill label={t('recommendations.metric.specificity')} value={formatPercent(m.specificity)} />
+            <MetricPill label={t('recommendations.metric.lod')} value={`${m.lod_value} ${m.lod_unit}`} />
+            <MetricPill
+              label={t('recommendations.metric.estimatedCost')}
+              value={formatCurrency(m.estimated_cost_usd)}
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => setDrawerOpen(true)}
+          >
+            <BookOpen className="h-4 w-4" />
+            {t('recommendations.viewEvidence')}
+            {literatureCount > 0 ? ` (${literatureCount})` : ''}
+          </Button>
+        </CardContent>
+      </Card>
+      <CitationDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        evidence={rec.evidence}
+        sensorName={rec.sensor_name}
+      />
+    </>
   );
 }
 

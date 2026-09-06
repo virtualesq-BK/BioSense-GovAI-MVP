@@ -24,6 +24,8 @@ import {
   type RagEvalResult,
   type RagQueryResult
 } from '@/lib/api-client';
+import { useLanguage } from '@/lib/i18n/language-provider';
+import type { TranslationKey } from '@/lib/i18n/dictionary';
 
 type Tab = 'papers' | 'query' | 'evaluation';
 
@@ -34,6 +36,7 @@ for ctDNA biomarker KRAS G12D in colorectal cancer patients. The aptamer recogni
 early cancer screening applications.`;
 
 export default function LiteratureAdminPage() {
+  const { t } = useLanguage();
   const [tab, setTab] = useState<Tab>('papers');
   const [papers, setPapers] = useState<PaperSummary[]>([]);
   const [status, setStatus] = useState<IngestionStatus | null>(null);
@@ -62,11 +65,11 @@ export default function LiteratureAdminPage() {
       setPapers(p);
       setStatus(s);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load');
+      setError(e instanceof Error ? e.message : t('admin.error.loadFailed'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     refresh();
@@ -83,7 +86,7 @@ export default function LiteratureAdminPage() {
       });
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ingest failed');
+      setError(e instanceof Error ? e.message : t('admin.error.ingestFailed'));
     } finally {
       setLoading(false);
     }
@@ -98,7 +101,7 @@ export default function LiteratureAdminPage() {
       await literatureApi.uploadPdf(file, `upload:${file.name}`, file.name.replace('.pdf', ''));
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed');
+      setError(err instanceof Error ? err.message : t('admin.error.uploadFailed'));
     } finally {
       setLoading(false);
     }
@@ -116,7 +119,7 @@ export default function LiteratureAdminPage() {
       });
       setQueryResult(result);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Query failed');
+      setError(e instanceof Error ? e.message : t('admin.error.queryFailed'));
     } finally {
       setLoading(false);
     }
@@ -135,47 +138,44 @@ export default function LiteratureAdminPage() {
       const history = await literatureApi.listEvaluations();
       setEvalHistory(history);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Evaluation failed');
+      setError(e instanceof Error ? e.message : t('admin.error.evalFailed'));
     } finally {
       setLoading(false);
     }
   }
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: 'papers', label: '논문 수집' },
-    { id: 'query', label: 'RAG 쿼리' },
-    { id: 'evaluation', label: '평가' }
+  const tabs: { id: Tab; labelKey: TranslationKey }[] = [
+    { id: 'papers', labelKey: 'admin.tab.papers' },
+    { id: 'query', labelKey: 'admin.tab.query' },
+    { id: 'evaluation', labelKey: 'admin.tab.evaluation' }
   ];
 
   return (
-    <PageLayout
-      title="과학 문헌 RAG"
-      description="PDF 수집 → 청킹 → pgvector 임베딩 → 바이오마커 추천 + 인용"
-    >
+    <PageLayout title={t('admin.title')} description={t('admin.description')}>
       {status && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <StatCard title="전체" value={status.total_papers} />
-          <StatCard title="인덱싱됨" value={status.indexed_papers} />
-          <StatCard title="대기" value={status.pending_papers} />
-          <StatCard title="실패" value={status.failed_papers} />
-          <StatCard title="청크" value={status.total_chunks} />
+          <StatCard title={t('admin.stat.total')} value={status.total_papers} />
+          <StatCard title={t('admin.stat.indexed')} value={status.indexed_papers} />
+          <StatCard title={t('admin.stat.pending')} value={status.pending_papers} />
+          <StatCard title={t('admin.stat.failed')} value={status.failed_papers} />
+          <StatCard title={t('admin.stat.chunks')} value={status.total_chunks} />
         </div>
       )}
 
       <div className="flex gap-1 border-b border-[var(--border)]">
-        {tabs.map((t) => (
+        {tabs.map((tabItem) => (
           <button
-            key={t.id}
+            key={tabItem.id}
             type="button"
-            onClick={() => setTab(t.id)}
+            onClick={() => setTab(tabItem.id)}
             className={cn(
               'px-4 py-2.5 text-sm font-medium transition-colors',
-              tab === t.id
+              tab === tabItem.id
                 ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]'
                 : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
             )}
           >
-            {t.label}
+            {t(tabItem.labelKey)}
           </button>
         ))}
       </div>
@@ -193,16 +193,16 @@ export default function LiteratureAdminPage() {
           <section className="space-y-4">
             <div className="flex flex-wrap gap-3">
               <Button onClick={handleIngestSample} disabled={loading}>
-                샘플 논문 텍스트 수집
+                {t('admin.ingestSample')}
               </Button>
               <label className="cursor-pointer">
                 <span className="inline-flex h-10 items-center rounded-lg border border-[var(--border)] px-4 text-sm font-medium hover:bg-[var(--muted)]">
-                  PDF 업로드
+                  {t('admin.uploadPdf')}
                 </span>
                 <input type="file" accept=".pdf" className="hidden" onChange={handleUpload} />
               </label>
               <Button variant="outline" onClick={refresh} disabled={loading}>
-                새로고침
+                {t('common.refresh')}
               </Button>
             </div>
             <Card>
@@ -210,10 +210,10 @@ export default function LiteratureAdminPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>제목</TableHead>
-                      <TableHead>ID</TableHead>
-                      <TableHead>상태</TableHead>
-                      <TableHead>청크</TableHead>
+                      <TableHead>{t('admin.table.title')}</TableHead>
+                      <TableHead>{t('admin.table.id')}</TableHead>
+                      <TableHead>{t('admin.table.status')}</TableHead>
+                      <TableHead>{t('admin.table.chunks')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -232,7 +232,7 @@ export default function LiteratureAdminPage() {
                     {papers.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={4} className="py-8 text-center text-[var(--muted-foreground)]">
-                          수집된 논문이 없습니다.
+                          {t('admin.table.empty')}
                         </TableCell>
                       </TableRow>
                     )}
@@ -247,14 +247,18 @@ export default function LiteratureAdminPage() {
           <section className="space-y-4">
             <Card>
               <CardContent className="space-y-3 pt-6">
-                <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="RAG 쿼리" />
+                <Input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={t('admin.query.placeholder')}
+                />
                 <Input
                   value={biomarker}
                   onChange={(e) => setBiomarker(e.target.value)}
-                  placeholder="바이오마커 (선택)"
+                  placeholder={t('admin.query.biomarkerPlaceholder')}
                 />
                 <Button onClick={handleQuery} disabled={loading}>
-                  바이오마커 추천 생성
+                  {t('admin.query.generate')}
                 </Button>
               </CardContent>
             </Card>
@@ -272,7 +276,7 @@ export default function LiteratureAdminPage() {
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm">
-                        {rec.sensor_strategy} · {rec.recognition_approach} · confidence{' '}
+                        {rec.sensor_strategy} · {rec.recognition_approach} · {t('admin.query.confidence')}{' '}
                         {rec.confidence}
                       </p>
                       <p className="mt-2 text-sm text-[var(--muted-foreground)]">{rec.rationale}</p>
@@ -291,15 +295,15 @@ export default function LiteratureAdminPage() {
                 <Input
                   value={evalQuery}
                   onChange={(e) => setEvalQuery(e.target.value)}
-                  placeholder="평가 쿼리"
+                  placeholder={t('admin.eval.queryPlaceholder')}
                 />
                 <Input
                   value={evalTerms}
                   onChange={(e) => setEvalTerms(e.target.value)}
-                  placeholder="기대 키워드 (쉼표 구분)"
+                  placeholder={t('admin.eval.termsPlaceholder')}
                 />
                 <Button onClick={handleEvaluate} disabled={loading}>
-                  검색 품질 평가 실행
+                  {t('admin.eval.run')}
                 </Button>
               </CardContent>
             </Card>
@@ -314,7 +318,7 @@ export default function LiteratureAdminPage() {
             {evalHistory.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm">평가 이력</CardTitle>
+                  <CardTitle className="text-sm">{t('admin.eval.history')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-1">
                   {evalHistory.slice(0, 5).map((e) => (

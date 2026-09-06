@@ -51,3 +51,16 @@ class CancerStatsResponse(BaseModel):
     mortality_rate: float | None
     data_year: int
     source: str
+
+
+class HarvestLiteratureRequest(BaseModel):
+    queries: list[str] | None = None
+    max_results_per_query: int = Field(default=20, ge=1, le=100)
+
+
+class HarvestLiteratureResponse(BaseModel):
+    harvested: int
+    skipped: int
+    failed: int
+    paper_ids: list[str]
+    message: str

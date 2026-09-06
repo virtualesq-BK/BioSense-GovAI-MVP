@@ -185,6 +185,18 @@ class SensorPerformance(Base):
     source: Mapped[str | None] = mapped_column(Text)
     measured_at: Mapped[date | None] = mapped_column(Date)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    auc: Mapped[Decimal | None] = mapped_column(Numeric(5, 4))
+    assay_time_minutes: Mapped[Decimal | None] = mapped_column(Numeric)
+    sample_volume: Mapped[Decimal | None] = mapped_column(Numeric)
+    sample_volume_unit: Mapped[str | None] = mapped_column(Text)
+    estimated_cost_usd: Mapped[Decimal | None] = mapped_column(Numeric)
+    source_paper_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("papers.id", ondelete="SET NULL")
+    )
+    extraction_confidence: Mapped[Decimal | None] = mapped_column(Numeric(5, 4))
+    is_estimated: Mapped[bool] = mapped_column(nullable=False, default=False)
+    conflicting_sources: Mapped[bool] = mapped_column(nullable=False, default=False)
+    source_excerpt: Mapped[str | None] = mapped_column(Text)
 
     sensor: Mapped["Sensor"] = relationship(back_populates="performances")
 
