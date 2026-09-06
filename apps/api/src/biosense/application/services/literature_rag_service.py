@@ -8,7 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from biosense.config import settings
 from biosense.domain.entities.literature import BiomarkerRecommendation, Citation, RetrievedChunk
 from biosense.infrastructure.ai.embedding_service import EmbeddingService
-from biosense.infrastructure.ai.openai_client import create_openai_client
+from biosense.infrastructure.ai.openai_client import (
+    create_json_chat_completion,
+    create_openai_client,
+)
 from biosense.infrastructure.persistence.postgres.literature_repository import LiteratureRepository
 
 logger = structlog.get_logger()
@@ -126,13 +129,13 @@ Return JSON array of 1-3 biomarker recommendations:
 [{{"biomarker_name": "...", "sensor_strategy": "...", "recognition_approach": "...",
    "rationale": "...", "confidence": 0.0-1.0, "cited_paper_ids": ["pmid:..."]}}]"""
 
-        response = await self._client.chat.completions.create(
+        response = await create_json_chat_completion(
+            self._client,
             model=settings.openai_model,
             messages=[
                 {"role": "system", "content": BIOMARKER_RAG_SYSTEM},
                 {"role": "user", "content": user_prompt},
             ],
-            response_format={"type": "json_object"},
             temperature=0.2,
         )
         raw = response.choices[0].message.content or "{}"

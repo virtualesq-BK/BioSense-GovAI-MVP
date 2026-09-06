@@ -17,7 +17,10 @@ from biosense.domain.entities.recommendation import (
     RecommendationInput,
     SensorRecommendation,
 )
-from biosense.infrastructure.ai.openai_client import create_openai_client
+from biosense.infrastructure.ai.openai_client import (
+    create_json_chat_completion,
+    create_openai_client,
+)
 from biosense.infrastructure.persistence.postgres.models import Recommendation
 
 logger = structlog.get_logger()
@@ -161,13 +164,13 @@ Ranked candidates:
 Provide one rationale sentence per candidate."""
 
         try:
-            response = await self._client.chat.completions.create(
+            response = await create_json_chat_completion(
+                self._client,
                 model=settings.openai_model,
                 messages=[
                     {"role": "system", "content": LLM_REFINE_SYSTEM},
                     {"role": "user", "content": prompt},
                 ],
-                response_format={"type": "json_object"},
                 temperature=0.2,
             )
             raw = response.choices[0].message.content or "{}"
