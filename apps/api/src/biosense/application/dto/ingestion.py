@@ -1,4 +1,3 @@
-from collections.abc import AsyncGenerator
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -63,4 +62,22 @@ class HarvestLiteratureResponse(BaseModel):
     skipped: int
     failed: int
     paper_ids: list[str]
+    message: str
+
+
+class GraphSyncDomainResponse(BaseModel):
+    cancers: int
+    biomarkers: int
+    sensors: int
+    publications: int
+    message: str
+
+
+class GraphSyncGeneRequest(BaseModel):
+    symbol: str = Field(min_length=1, max_length=64)
+
+
+class GraphSyncGeneResponse(BaseModel):
+    gene_symbol: str
+    mutations_synced: int
     message: str
