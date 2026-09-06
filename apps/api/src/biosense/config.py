@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     # NCI Genomic Data Commons (GDC) — open-access REST API, no auth required
     gdc_api_url: str = "https://api.gdc.cancer.gov"
 
+    # Europe PMC — open-access REST API, no auth required
+    europe_pmc_base_url: str = "https://www.ebi.ac.uk/europepmc/webservices/rest"
+
     # Ingestion pipeline
     ingestion_scheduler_enabled: bool = True
     ingestion_cron_hour: int = 3

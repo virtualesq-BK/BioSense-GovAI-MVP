@@ -165,9 +165,15 @@ Sources:
 - Output formats: JSON, XML, Dublin Core RDF/XML. Users must accept EBI's Privacy Notice
   (no account needed, it's a usage-terms acknowledgment, not a login).
 
-**Implication:** Safe to build `EuropePmcConnector` following the same shape as
-`PubmedClient` — real API, no auth, straightforward JSON responses. Useful complement to
-PubMed for open-access full-text (PubMed/E-utilities gives abstracts only).
+**Implication:** Safe to build following the same shape as `PubmedClient` — real API,
+no auth, straightforward JSON responses. Useful complement to PubMed for open-access
+full-text metadata (PubMed/E-utilities gives abstracts only).
+
+**Status: implemented.** `apps/api/src/biosense/infrastructure/external/europe_pmc_client.py`
+(`EuropePmcClient`) — `search_and_fetch(query, max_results)` normalizes results into the
+same `RawPaperRecord` shape as `PubmedClient`, using `firstPublicationDate` for exact
+publication dates. Live-tested against the real API before implementation. Unit tests:
+`apps/api/tests/unit/test_europe_pmc_client.py` (7 tests, mocked HTTP).
 
 Sources:
 - [Europe PMC RESTful Web Service](https://europmc.org/RestfulWebService)
@@ -183,7 +189,12 @@ Sources:
 | NCI GDC | ✅ Real REST API | None (open-access) | ✅ Live-tested | **Implemented** — `GdcClient` (`infrastructure/external/gdc_client.py`) |
 | TCGA | (via GDC) | via GDC | ✅ | Covered by `GdcClient.search_projects(primary_site=...)` — no separate client |
 | PubMed | ✅ Real API | Optional key (raises rate limit) | ✅ (already in repo) | Already implemented — add API key when scaling |
-| Europe PMC | ✅ Real API | None | ✅ (docs) | Not yet implemented — next candidate, same pattern as `PubmedClient`/`GdcClient` |
+| Europe PMC | ✅ Real API | None | ✅ Live-tested | **Implemented** — `EuropePmcClient` (`infrastructure/external/europe_pmc_client.py`) |
+
+All four implemented clients (`KosisClient`, `KdcaClient`, `PubmedClient`, `GdcClient`,
+`EuropePmcClient`) implement the common `PublicDataConnector` interface
+(`infrastructure/external/base.py`: `search()`, `fetch()`, `health_check()`) alongside
+their existing domain-specific methods — see `apps/api/tests/unit/test_public_data_connector_interface.py`.
 
 ## Key Constraint This Sets on the Roadmap
 

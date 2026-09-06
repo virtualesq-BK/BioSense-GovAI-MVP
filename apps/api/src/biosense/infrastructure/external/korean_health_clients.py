@@ -1,5 +1,6 @@
 from decimal import Decimal
-from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
+from typing import Any
+from urllib.parse import parse_qs, urlparse, urlunparse
 
 import httpx
 import structlog
@@ -7,15 +8,41 @@ import structlog
 from biosense.config import settings
 from biosense.domain.entities.public_health import RawCancerStatRecord
 from biosense.infrastructure.common.retry import with_retry
+from biosense.infrastructure.external.base import PublicDataConnector
 from biosense.infrastructure.external.seed_loader import load_seed_records
 
 logger = structlog.get_logger()
 
 
-class KosisClient:
+class KosisClient(PublicDataConnector):
     """KOSIS Open API — National Cancer Registration Statistics."""
 
     SOURCE = "KOSIS"
+
+    async def search(
+        self, query: str, filters: dict[str, Any] | None = None
+    ) -> list[RawCancerStatRecord]:
+        """`query` is unused — KOSIS's national cancer table is not keyword-searchable.
+        `filters["year"]` selects the statistics year (default 2023)."""
+        year = (filters or {}).get("year", 2023)
+        return await self.fetch_cancer_statistics(year=year)
+
+    async def fetch(self, identifier: str) -> list[RawCancerStatRecord] | None:
+        """Fetch all cancer statistics for a given year (identifier = year string)."""
+        try:
+            return await self.fetch_cancer_statistics(year=int(identifier))
+        except ValueError:
+            logger.warning("kosis_fetch_invalid_identifier", identifier=identifier)
+            return None
+
+    async def health_check(self) -> bool:
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(settings.kosis_base_url)
+            return response.status_code < 500
+        except Exception as exc:
+            logger.warning("kosis_health_check_failed", error=str(exc))
+            return False
 
     async def fetch_cancer_statistics(self, year: int = 2023) -> list[RawCancerStatRecord]:
         if not settings.kosis_api_key:
@@ -74,10 +101,40 @@ class KosisClient:
             return load_seed_records(source_filter="KOSIS")
 
 
-class KdcaClient:
+class KdcaClient(PublicDataConnector):
     """KDCA — Cancer incidence and mortality statistics."""
 
     SOURCE = "KDCA"
+
+    async def search(
+        self, query: str, filters: dict[str, Any] | None = None
+    ) -> list[RawCancerStatRecord]:
+        """`query` is unused — KDCA's cancer table is not keyword-searchable.
+        `filters["year"]` selects the statistics year (default 2023)."""
+        year = (filters or {}).get("year", 2023)
+        return await self.fetch_cancer_statistics(year=year)
+
+    async def fetch(self, identifier: str) -> list[RawCancerStatRecord] | None:
+        """Fetch all cancer statistics for a given year (identifier = year string)."""
+        try:
+            return await self.fetch_cancer_statistics(year=int(identifier))
+        except ValueError:
+            logger.warning("kdca_fetch_invalid_identifier", identifier=identifier)
+            return None
+
+    async def health_check(self) -> bool:
+        if not settings.has_kdca_api:
+            return False
+        url = settings.kdca_base_url
+        if settings.kdca_api_url:
+            url, _ = _split_kdca_url(settings.kdca_api_url)
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(url)
+            return response.status_code < 500
+        except Exception as exc:
+            logger.warning("kdca_health_check_failed", error=str(exc))
+            return False
 
     async def fetch_cancer_statistics(self, year: int = 2023) -> list[RawCancerStatRecord]:
         if not settings.has_kdca_api:

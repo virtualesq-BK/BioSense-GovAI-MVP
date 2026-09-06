@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import xml.etree.ElementTree as ET
 from datetime import date
+from typing import Any
 
 import httpx
 import structlog
@@ -12,6 +13,7 @@ import structlog
 from biosense.config import settings
 from biosense.domain.entities.literature import RawPaperRecord
 from biosense.infrastructure.common.retry import with_retry
+from biosense.infrastructure.external.base import PublicDataConnector
 
 logger = structlog.get_logger()
 
@@ -23,13 +25,43 @@ DEFAULT_PUBMED_QUERIES: tuple[str, ...] = (
 )
 
 
-class PubmedClient:
+class PubmedClient(PublicDataConnector):
     """PubMed search + fetch via NCBI E-utilities."""
 
     SOURCE = "pubmed"
 
     def __init__(self) -> None:
         self._base = settings.pubmed_base_url.rstrip("/")
+
+    async def search(
+        self, query: str, filters: dict[str, Any] | None = None
+    ) -> list[RawPaperRecord]:
+        max_results = (filters or {}).get("max_results", 20)
+        return await self.search_and_fetch(query, max_results=max_results)
+
+    async def fetch(self, identifier: str) -> RawPaperRecord | None:
+        """Fetch a single article by PMID (with or without a `pmid:` prefix)."""
+        pmid = identifier.removeprefix("pmid:")
+        try:
+            records = await self._efetch([pmid])
+        except Exception as exc:
+            logger.error("pubmed_fetch_single_failed", pmid=pmid, error=str(exc))
+            return None
+        return records[0] if records else None
+
+    async def health_check(self) -> bool:
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    f"{self._base}/esearch.fcgi",
+                    params={"db": "pubmed", "term": "cancer", "retmax": 0, "retmode": "json"},
+                )
+                response.raise_for_status()
+                payload = response.json()
+            return "esearchresult" in payload
+        except Exception as exc:
+            logger.warning("pubmed_health_check_failed", error=str(exc))
+            return False
 
     async def search_and_fetch(
         self, query: str, *, max_results: int = 20

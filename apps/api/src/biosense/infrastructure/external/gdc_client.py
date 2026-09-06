@@ -13,6 +13,7 @@ bypassing controlled-access restrictions.
 from __future__ import annotations
 
 import json
+from typing import Any
 
 import httpx
 import structlog
@@ -24,17 +25,52 @@ from biosense.domain.entities.genomics import (
     RawGdcProjectRecord,
 )
 from biosense.infrastructure.common.retry import with_retry
+from biosense.infrastructure.external.base import PublicDataConnector
 
 logger = structlog.get_logger()
 
+GdcRecord = RawGdcProjectRecord | RawGdcGeneRecord | RawGdcMutationRecord
 
-class GdcClient:
+
+class GdcClient(PublicDataConnector):
     """Search + fetch open-access GDC metadata (projects, genes, mutations)."""
 
     SOURCE = "gdc"
 
     def __init__(self) -> None:
         self._base = settings.gdc_api_url.rstrip("/")
+
+    async def search(
+        self, query: str, filters: dict[str, Any] | None = None
+    ) -> list[GdcRecord]:
+        """Search GDC. `filters["entity"]` selects "projects" (default), "genes",
+        or "mutations"; `query` is used as the primary_site / symbol / gene_symbol
+        value for that entity."""
+        entity = (filters or {}).get("entity", "projects")
+        if entity == "genes":
+            return list(await self.search_genes(query))
+        if entity == "mutations":
+            return list(await self.search_mutations(gene_symbol=query or None))
+        return list(await self.search_projects(primary_site=query or None))
+
+    async def fetch(self, identifier: str) -> RawGdcProjectRecord | None:
+        """Fetch a single project by its GDC project_id (e.g. 'TCGA-LUAD')."""
+        filters = {"op": "in", "content": {"field": "project_id", "value": [identifier]}}
+
+        async def _call() -> RawGdcProjectRecord | None:
+            payload = await self._get(
+                "projects",
+                fields="project_id,name,primary_site,disease_type,summary.case_count",
+                filters=filters,
+                size=1,
+            )
+            return _parse_project(payload[0]) if payload else None
+
+        try:
+            return await with_retry(_call, operation_name="gdc_fetch_project")
+        except Exception as exc:
+            logger.error("gdc_fetch_project_failed", identifier=identifier, error=str(exc))
+            return None
 
     async def health_check(self) -> bool:
         try:
