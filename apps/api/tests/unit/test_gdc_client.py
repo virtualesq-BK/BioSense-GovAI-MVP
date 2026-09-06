@@ -187,3 +187,35 @@ async def test_health_check_failure_returns_false() -> None:
     ):
         client = GdcClient()
         assert await client.health_check() is False
+
+
+@pytest.mark.asyncio
+async def test_count_mutations_for_gene_returns_total() -> None:
+    mock_client = AsyncMock()
+    mock_client.get = AsyncMock(
+        return_value=_mock_response({"data": {"pagination": {"total": 141}}})
+    )
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=None)
+
+    with patch(
+        "biosense.infrastructure.external.gdc_client.httpx.AsyncClient",
+        return_value=mock_client,
+    ):
+        client = GdcClient()
+        assert await client.count_mutations_for_gene("KRAS") == 141
+
+
+@pytest.mark.asyncio
+async def test_count_mutations_for_gene_returns_none_on_failure() -> None:
+    mock_client = AsyncMock()
+    mock_client.get = AsyncMock(side_effect=ConnectionError("offline"))
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=None)
+
+    with patch(
+        "biosense.infrastructure.external.gdc_client.httpx.AsyncClient",
+        return_value=mock_client,
+    ):
+        client = GdcClient()
+        assert await client.count_mutations_for_gene("KRAS") is None

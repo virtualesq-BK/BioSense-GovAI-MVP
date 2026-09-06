@@ -167,6 +167,39 @@ class GdcClient(PublicDataConnector):
             logger.error("gdc_search_mutations_failed", gene_symbol=gene_symbol, error=str(exc))
             return []
 
+    async def count_mutations_for_gene(self, gene_symbol: str) -> int | None:
+        """Total number of recorded SSMs for a gene (not capped by page size).
+
+        Returns None on failure — callers must treat that as "unknown", not zero.
+        """
+        filters = {
+            "op": "in",
+            "content": {
+                "field": "consequence.transcript.gene.symbol",
+                "value": [normalize_gene_symbol(gene_symbol)],
+            },
+        }
+
+        async def _call() -> int:
+            return await self._count("ssms", filters=filters)
+
+        try:
+            return await with_retry(_call, operation_name="gdc_count_mutations")
+        except Exception as exc:
+            logger.error("gdc_count_mutations_failed", gene_symbol=gene_symbol, error=str(exc))
+            return None
+
+    async def _count(self, endpoint: str, *, filters: dict) -> int:
+        params: dict[str, str | int] = {"size": 0, "format": "JSON", "filters": json.dumps(filters)}
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(f"{self._base}/{endpoint}", params=params)
+            response.raise_for_status()
+            payload = response.json()
+        total = payload.get("data", {}).get("pagination", {}).get("total")
+        if not isinstance(total, int):
+            raise ValueError(f"GDC {endpoint} count returned no pagination.total")
+        return total
+
     async def _get(
         self,
         endpoint: str,
