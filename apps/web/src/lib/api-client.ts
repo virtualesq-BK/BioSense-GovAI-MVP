@@ -200,6 +200,139 @@ export type RagEvalResult = {
   chunks_evaluated: number;
 };
 
+// --- Catalog (§20) ---
+
+export type Cancer = {
+  id: string;
+  code: string;
+  name_en: string;
+  name_ko: string | null;
+  icd_code: string | null;
+};
+
+export type ScoreComponent = {
+  score: number;
+  evidence: string;
+  source: string;
+  confidence: number;
+  missing_data: boolean;
+};
+
+export type BiomarkerPriorityScore = {
+  biomarker_name: string;
+  cancer_type: string;
+  total_score: number;
+  disease_burden: ScoreComponent;
+  molecular_evidence: ScoreComponent;
+  clinical_evidence: ScoreComponent;
+  detection_feasibility: ScoreComponent;
+  sensor_compatibility: ScoreComponent;
+  data_confidence: ScoreComponent;
+  missing_data_factors: string[];
+};
+
+export type DataSource = {
+  name: string;
+  provider: string;
+  source_type: string;
+  access_method: string;
+  license: string;
+  update_method: string;
+  url: string;
+};
+
+// --- R&D Design (§13/§22) ---
+
+export type RndDesignRequest = {
+  country?: string;
+  cancer: string;
+  biomarker_type?: string | null;
+  target_gene?: string | null;
+  goal: string;
+  region_code?: string;
+  patient_age?: number;
+};
+
+export type EpidemiologicalEvidence = {
+  region_code: string;
+  region_name_ko: string | null;
+  incidence_rate: number | null;
+  mortality_rate: number | null;
+  national_incidence_avg: number | null;
+  national_mortality_avg: number | null;
+  narrative: string;
+  source: string;
+  missing_data: boolean;
+};
+
+export type MolecularCharacteristics = {
+  gene_symbol: string | null;
+  gene_name: string | null;
+  biotype: string | null;
+  mutation_count: number | null;
+  source: string;
+  missing_data: boolean;
+};
+
+export type SensorCandidate = {
+  sensor_name: string;
+  sensor_type: string;
+  recognition_code: string;
+  recognition_name: string;
+  match_score: number;
+  sensor_efficiency: number;
+  sensitivity: number | null;
+  specificity: number | null;
+  lod_value: number | null;
+  lod_unit: string | null;
+  estimated_cost_usd: number | null;
+  is_estimated: boolean | null;
+  graph_path: string;
+};
+
+export type ExperimentalDesignHypothesis = {
+  steps: string[];
+  reagents: string[];
+  duration_hours: number | null;
+  is_ai_suggested: boolean;
+};
+
+export type ReferenceEntry = {
+  external_id: string;
+  title: string;
+  source: string;
+};
+
+export type RndDesignReport = {
+  target_disease: string;
+  goal: string;
+  epidemiological_evidence: EpidemiologicalEvidence;
+  biomarker_candidates: BiomarkerPriorityScore[];
+  selected_biomarker_name: string | null;
+  molecular_characteristics: MolecularCharacteristics;
+  recognition_strategy: string | null;
+  sensor_candidates: SensorCandidate[];
+  existing_evidence: ReferenceEntry[];
+  expected_performance: SensorCandidate | null;
+  evidence_confidence: number;
+  experimental_design_hypothesis: ExperimentalDesignHypothesis | null;
+  data_limitations: string[];
+  references: string[];
+};
+
+export const catalogApi = {
+  listCancers: () => apiFetch<Cancer[]>('/v1/cancers'),
+  listSources: () => apiFetch<DataSource[]>('/v1/sources')
+};
+
+export const rndApi = {
+  design: (body: RndDesignRequest) =>
+    apiFetch<RndDesignReport>('/v1/rnd/design', {
+      method: 'POST',
+      body: JSON.stringify(body)
+    })
+};
+
 export const healthApi = {
   check: () => apiFetch<HealthResponse>('/v1/health')
 };

@@ -13,6 +13,7 @@ export const dictionary = {
   'nav.dashboard': { ko: '대시보드', en: 'Dashboard' },
   'nav.recommendations': { ko: '추천', en: 'Recommendations' },
   'nav.reports': { ko: '리포트', en: 'Reports' },
+  'nav.rndDesign': { ko: 'R&D 설계', en: 'R&D Design' },
   'nav.admin': { ko: '관리', en: 'Admin' },
   'nav.closeMenu': { ko: '메뉴 닫기', en: 'Close menu' },
   'nav.footer': { ko: 'ctDNA · 공공데이터 · RAG', en: 'ctDNA · Public Data · RAG' },
@@ -338,7 +339,55 @@ export const dictionary = {
   'landing.workflow.step3.title': { ko: '리포트', en: 'Report' },
   'landing.workflow.step3.description': { ko: 'PDF보내기 및 팀 공유', en: 'Export to PDF and share with your team' },
   'landing.footer.admin': { ko: '관리', en: 'Admin' },
-  'landing.footer.apiDocs': { ko: 'API 문서', en: 'API Docs' }
+  'landing.footer.apiDocs': { ko: 'API 문서', en: 'API Docs' },
+
+  // R&D Design report (§13/§22)
+  'rndDesign.title': { ko: 'R&D 설계 리포트', en: 'R&D Design Report' },
+  'rndDesign.description': {
+    ko: '암종·바이오마커·목표를 입력하면 근거 기반 바이오마커-센서 공동설계 리포트를 생성합니다',
+    en: 'Enter a cancer, biomarker, and goal to generate an evidence-based biomarker–sensor co-design report'
+  },
+  'rndDesign.caseInput': { ko: '설계 조건', en: 'Design Input' },
+  'rndDesign.field.cancer': { ko: '암종', en: 'Cancer' },
+  'rndDesign.field.biomarkerType': { ko: 'ctDNA 분류 (선택)', en: 'ctDNA Class (optional)' },
+  'rndDesign.field.biomarkerType.any': { ko: '전체', en: 'Any' },
+  'rndDesign.field.targetGene': { ko: '타겟 유전자 (선택)', en: 'Target Gene (optional)' },
+  'rndDesign.field.goal': { ko: '목표', en: 'Goal' },
+  'rndDesign.field.goal.placeholder': {
+    ko: '예: 조기진단용 ctDNA biosensor 설계',
+    en: 'e.g. Design an early-detection ctDNA biosensor'
+  },
+  'rndDesign.field.region': { ko: '지역', en: 'Region' },
+  'rndDesign.field.patientAge': { ko: '환자 연령', en: 'Patient Age' },
+  'rndDesign.generate': { ko: '리포트 생성', en: 'Generate Report' },
+  'rndDesign.loading': { ko: '파이프라인 실행 중…', en: 'Running design pipeline…' },
+  'rndDesign.error.generateFailed': { ko: '리포트 생성 실패', en: 'Failed to generate report' },
+  'rndDesign.empty.title': { ko: '리포트가 여기에 표시됩니다', en: 'The report will appear here' },
+  'rndDesign.empty.description': {
+    ko: '왼쪽에서 조건을 입력하고 리포트 생성을 눌러주세요',
+    en: 'Enter your inputs on the left and click Generate Report'
+  },
+  'rndDesign.section.epidemiology': { ko: '1. 역학적 근거', en: '1. Epidemiological Evidence' },
+  'rndDesign.section.biomarkerCandidates': { ko: '2. 바이오마커 후보', en: '2. Biomarker Candidates' },
+  'rndDesign.section.molecular': { ko: '3. 분자적 특성', en: '3. Molecular Characteristics' },
+  'rndDesign.section.recognition': { ko: '4. 인식 전략', en: '4. Recognition Strategy' },
+  'rndDesign.section.sensors': { ko: '5-7. 센서 후보 및 성능 근거', en: '5-7. Sensor Candidates & Performance Evidence' },
+  'rndDesign.section.evidence': { ko: '7. 기존 근거 문헌', en: '7. Existing Evidence' },
+  'rndDesign.section.performance': { ko: '8. 예상 성능', en: '8. Expected Performance' },
+  'rndDesign.section.confidence': { ko: '9. 근거 신뢰도', en: '9. Evidence Confidence' },
+  'rndDesign.section.protocol': { ko: '10. 실험 설계 가설', en: '10. Experimental Design Hypothesis' },
+  'rndDesign.section.limitations': { ko: '11. 한계 및 주의사항', en: '11. Data Limitations' },
+  'rndDesign.section.references': { ko: '12. 참고 문헌', en: '12. References' },
+  'rndDesign.noBiomarkerFound': {
+    ko: '이 조건에 맞는 바이오마커 후보를 그래프에서 찾지 못했습니다',
+    en: 'No biomarker candidates found in the graph for this input'
+  },
+  'rndDesign.missingData': { ko: '데이터 없음', en: 'No data' },
+  'rndDesign.estimated': { ko: '문헌 기반 추정값', en: 'Literature-derived estimate' },
+  'rndDesign.measured': { ko: '실측값', en: 'Measured' },
+  'rndDesign.aiSuggested': { ko: 'AI 제안 (미검증)', en: 'AI-suggested (unvalidated)' },
+  'rndDesign.curatedProtocol': { ko: '기존 프로토콜', en: 'Curated protocol' },
+  'rndDesign.regionAverage': { ko: '전국 평균', en: 'National average' }
 } as const satisfies Record<string, Record<Locale, string>>;
 
 export type TranslationKey = keyof typeof dictionary;

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   Activity,
   FileText,
+  FlaskConical,
   LayoutDashboard,
   Settings,
   Sparkles,
@@ -17,6 +18,7 @@ import type { TranslationKey } from '@/lib/i18n/dictionary';
 const navItems: { href: string; labelKey: TranslationKey; icon: typeof LayoutDashboard }[] = [
   { href: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard },
   { href: '/recommendations', labelKey: 'nav.recommendations', icon: Sparkles },
+  { href: '/rnd-design', labelKey: 'nav.rndDesign', icon: FlaskConical },
   { href: '/reports', labelKey: 'nav.reports', icon: FileText },
   { href: '/admin', labelKey: 'nav.admin', icon: Settings }
 ];
