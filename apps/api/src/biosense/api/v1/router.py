@@ -1,6 +1,15 @@
 from fastapi import APIRouter
 
-from biosense.api.v1 import catalog, graph, health, ingestion, literature, recommendations, users
+from biosense.api.v1 import (
+    catalog,
+    graph,
+    health,
+    ingestion,
+    literature,
+    recommendations,
+    rnd,
+    users,
+)
 
 api_v1_router = APIRouter(prefix="/v1")
 api_v1_router.include_router(health.router)
@@ -10,3 +19,4 @@ api_v1_router.include_router(literature.router)
 api_v1_router.include_router(recommendations.router)
 api_v1_router.include_router(graph.router)
 api_v1_router.include_router(catalog.router)
+api_v1_router.include_router(rnd.router)
