@@ -26,6 +26,9 @@ async def test_ingest_text_endpoint() -> None:
             chunk_count = 3
             pdf_filename = None
             created_at = datetime.now()
+            authors = None
+            abstract = None
+            metadata_ = {}
 
         mock_ingest.return_value = paper_id
 

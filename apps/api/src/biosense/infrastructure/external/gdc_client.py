@@ -1,0 +1,195 @@
+"""NCI Genomic Data Commons (GDC) REST API client.
+
+GDC (https://api.gdc.cancer.gov) is a genuine, public, open-access REST API —
+verified live (2026-09-07): /projects, /genes, /ssms, /status all respond
+without authentication for open-access metadata. See docs/data-access.md.
+
+Only open-access, high-level data is used here (project/gene/mutation-level
+metadata). Controlled-access data (raw sequencing files, germline variants)
+is out of scope for this client by design — see project rule against
+bypassing controlled-access restrictions.
+"""
+
+from __future__ import annotations
+
+import json
+
+import httpx
+import structlog
+
+from biosense.config import settings
+from biosense.domain.entities.genomics import (
+    RawGdcGeneRecord,
+    RawGdcMutationRecord,
+    RawGdcProjectRecord,
+)
+from biosense.infrastructure.common.retry import with_retry
+
+logger = structlog.get_logger()
+
+
+class GdcClient:
+    """Search + fetch open-access GDC metadata (projects, genes, mutations)."""
+
+    SOURCE = "gdc"
+
+    def __init__(self) -> None:
+        self._base = settings.gdc_api_url.rstrip("/")
+
+    async def health_check(self) -> bool:
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(f"{self._base}/status")
+                response.raise_for_status()
+                payload = response.json()
+            return payload.get("status") == "OK"
+        except Exception as exc:
+            logger.warning("gdc_health_check_failed", error=str(exc))
+            return False
+
+    async def search_projects(
+        self, *, primary_site: str | None = None, size: int = 20
+    ) -> list[RawGdcProjectRecord]:
+        """Search GDC projects (e.g. TCGA cohorts), optionally filtered by primary site."""
+
+        filters = None
+        if primary_site:
+            filters = {
+                "op": "in",
+                "content": {"field": "primary_site", "value": [primary_site]},
+            }
+
+        async def _call() -> list[RawGdcProjectRecord]:
+            payload = await self._get(
+                "projects",
+                fields="project_id,name,primary_site,disease_type,summary.case_count",
+                filters=filters,
+                size=size,
+            )
+            return [_parse_project(hit) for hit in payload]
+
+        try:
+            return await with_retry(_call, operation_name="gdc_search_projects")
+        except Exception as exc:
+            logger.error("gdc_search_projects_failed", error=str(exc))
+            return []
+
+    async def search_genes(self, symbol: str, *, size: int = 5) -> list[RawGdcGeneRecord]:
+        """Look up gene annotations by HGNC symbol (e.g. 'KRAS')."""
+
+        filters = {"op": "in", "content": {"field": "symbol", "value": [symbol.upper()]}}
+
+        async def _call() -> list[RawGdcGeneRecord]:
+            payload = await self._get(
+                "genes",
+                fields="gene_id,symbol,name,biotype",
+                filters=filters,
+                size=size,
+            )
+            return [_parse_gene(hit) for hit in payload]
+
+        try:
+            return await with_retry(_call, operation_name="gdc_search_genes")
+        except Exception as exc:
+            logger.error("gdc_search_genes_failed", symbol=symbol, error=str(exc))
+            return []
+
+    async def search_mutations(
+        self, *, gene_symbol: str | None = None, size: int = 20
+    ) -> list[RawGdcMutationRecord]:
+        """Search simple somatic mutations (SSMs), optionally filtered by gene symbol."""
+
+        filters = None
+        if gene_symbol:
+            filters = {
+                "op": "in",
+                "content": {
+                    "field": "consequence.transcript.gene.symbol",
+                    "value": [gene_symbol.upper()],
+                },
+            }
+
+        async def _call() -> list[RawGdcMutationRecord]:
+            payload = await self._get(
+                "ssms",
+                fields=(
+                    "ssm_id,genomic_dna_change,mutation_subtype,"
+                    "consequence.transcript.gene.symbol,consequence.transcript.aa_change"
+                ),
+                filters=filters,
+                size=size,
+            )
+            return [_parse_mutation(hit) for hit in payload]
+
+        try:
+            return await with_retry(_call, operation_name="gdc_search_mutations")
+        except Exception as exc:
+            logger.error("gdc_search_mutations_failed", gene_symbol=gene_symbol, error=str(exc))
+            return []
+
+    async def _get(
+        self,
+        endpoint: str,
+        *,
+        fields: str,
+        size: int,
+        filters: dict | None = None,
+    ) -> list[dict]:
+        params: dict[str, str | int] = {"fields": fields, "size": size, "format": "JSON"}
+        if filters is not None:
+            params["filters"] = json.dumps(filters)
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(f"{self._base}/{endpoint}", params=params)
+            response.raise_for_status()
+            payload = response.json()
+
+        hits = payload.get("data", {}).get("hits")
+        if not isinstance(hits, list):
+            raise ValueError(f"GDC {endpoint} returned no hits array")
+        return hits
+
+
+def _parse_project(hit: dict) -> RawGdcProjectRecord:
+    summary = hit.get("summary") or {}
+    return RawGdcProjectRecord(
+        project_id=hit.get("project_id") or hit.get("id", ""),
+        name=hit.get("name", ""),
+        primary_sites=list(hit.get("primary_site") or []),
+        disease_types=list(hit.get("disease_type") or []),
+        case_count=summary.get("case_count"),
+        source=GdcClient.SOURCE,
+    )
+
+
+def _parse_gene(hit: dict) -> RawGdcGeneRecord:
+    return RawGdcGeneRecord(
+        gene_id=hit.get("gene_id") or hit.get("id", ""),
+        symbol=hit.get("symbol", ""),
+        name=hit.get("name"),
+        biotype=hit.get("biotype"),
+        source=GdcClient.SOURCE,
+    )
+
+
+def _parse_mutation(hit: dict) -> RawGdcMutationRecord:
+    gene_symbols: list[str] = []
+    aa_changes: list[str] = []
+    for consequence in hit.get("consequence") or []:
+        transcript = consequence.get("transcript") or {}
+        gene = transcript.get("gene") or {}
+        symbol = gene.get("symbol")
+        if symbol and symbol not in gene_symbols:
+            gene_symbols.append(symbol)
+        aa_change = transcript.get("aa_change")
+        if aa_change and aa_change not in aa_changes:
+            aa_changes.append(aa_change)
+
+    return RawGdcMutationRecord(
+        ssm_id=hit.get("ssm_id") or hit.get("id", ""),
+        genomic_dna_change=hit.get("genomic_dna_change"),
+        mutation_subtype=hit.get("mutation_subtype"),
+        gene_symbols=gene_symbols,
+        amino_acid_changes=aa_changes,
+        source=GdcClient.SOURCE,
+    )

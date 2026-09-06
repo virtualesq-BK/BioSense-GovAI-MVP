@@ -48,6 +48,9 @@ class Settings(BaseSettings):
     pubmed_api_key: str = ""
     pubmed_base_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 
+    # NCI Genomic Data Commons (GDC) — open-access REST API, no auth required
+    gdc_api_url: str = "https://api.gdc.cancer.gov"
+
     # Ingestion pipeline
     ingestion_scheduler_enabled: bool = True
     ingestion_cron_hour: int = 3
