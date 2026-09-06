@@ -3,12 +3,18 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from biosense.domain.entities.recommendation import ExtractedFeatures, GraphCandidate, PublicHealthSnapshot
+from biosense.domain.entities.recommendation import (
+    ExtractedFeatures,
+    GraphCandidate,
+    PublicHealthSnapshot,
+)
+from biosense.domain.services.normalization import normalize_cancer_type, normalize_region_code
 from biosense.infrastructure.external.seed_loader import KR_REGIONS
 from biosense.infrastructure.persistence.postgres.models import (
     Biomarker,
     BiomarkerRecognitionMatch,
     Cancer,
+    CancerBiomarker,
     CtDNA,
     Protocol,
     PublicHealthFeature,
@@ -16,7 +22,6 @@ from biosense.infrastructure.persistence.postgres.models import (
     RecognitionStrategy,
     Sensor,
     SensorPerformance,
-    CancerBiomarker,
 )
 
 logger = structlog.get_logger()
@@ -32,7 +37,7 @@ class GraphRetrievalService:
         self, features: ExtractedFeatures, limit: int = 20
     ) -> list[GraphCandidate]:
         cancer_id = await self._session.scalar(
-            select(Cancer.id).where(Cancer.code == _normalize_cancer_code(features.cancer_type))
+            select(Cancer.id).where(Cancer.code == normalize_cancer_type(features.cancer_type))
         )
         if not cancer_id:
             logger.warning("cancer_not_found", cancer_type=features.cancer_type)
@@ -147,8 +152,8 @@ class PublicHealthFeatureService:
     async def fetch_features(
         self, cancer_type: str, region_code: str
     ) -> PublicHealthSnapshot:
-        code = _normalize_cancer_code(cancer_type)
-        region = _normalize_region_code(region_code)
+        code = normalize_cancer_type(cancer_type)
+        region = normalize_region_code(region_code)
 
         cancer_id = await self._session.scalar(select(Cancer.id).where(Cancer.code == code))
         if not cancer_id:
@@ -208,26 +213,6 @@ def _public_health_score(incidence: float | None, mortality: float | None) -> fl
         return 0.5
     raw = (incidence or 0) / 100.0 + (mortality or 0) / 100.0
     return round(min(max(raw, 0.0), 1.0), 4)
-
-
-def _normalize_region_code(region_code: str) -> str:
-    code = (region_code or "").strip()
-    if code.startswith("KR-"):
-        return code
-    if code.isdigit():
-        return f"KR-{code.zfill(2)}"
-    return code
-
-
-def _normalize_cancer_code(cancer_type: str) -> str:
-    aliases = {
-        "CRC": "colorectal",
-        "LUNG": "lung",
-        "BREAST": "breast",
-        "LIVER": "liver",
-        "STOMACH": "stomach",
-    }
-    return aliases.get(cancer_type, cancer_type.lower() if cancer_type.isupper() else cancer_type)
 
 
 def _region_name_ko(region_code: str) -> str | None:

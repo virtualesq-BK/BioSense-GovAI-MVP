@@ -24,6 +24,7 @@ from biosense.domain.entities.genomics import (
     RawGdcMutationRecord,
     RawGdcProjectRecord,
 )
+from biosense.domain.services.normalization import normalize_gene_symbol
 from biosense.infrastructure.common.retry import with_retry
 from biosense.infrastructure.external.base import PublicDataConnector
 
@@ -113,7 +114,10 @@ class GdcClient(PublicDataConnector):
     async def search_genes(self, symbol: str, *, size: int = 5) -> list[RawGdcGeneRecord]:
         """Look up gene annotations by HGNC symbol (e.g. 'KRAS')."""
 
-        filters = {"op": "in", "content": {"field": "symbol", "value": [symbol.upper()]}}
+        filters = {
+            "op": "in",
+            "content": {"field": "symbol", "value": [normalize_gene_symbol(symbol)]},
+        }
 
         async def _call() -> list[RawGdcGeneRecord]:
             payload = await self._get(
@@ -141,7 +145,7 @@ class GdcClient(PublicDataConnector):
                 "op": "in",
                 "content": {
                     "field": "consequence.transcript.gene.symbol",
-                    "value": [gene_symbol.upper()],
+                    "value": [normalize_gene_symbol(gene_symbol)],
                 },
             }
 

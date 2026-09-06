@@ -7,6 +7,10 @@ import structlog
 
 from biosense.config import settings
 from biosense.domain.entities.public_health import RawCancerStatRecord
+from biosense.domain.services.normalization import (
+    normalize_cancer_type,
+    normalize_region_code,
+)
 from biosense.infrastructure.common.retry import with_retry
 from biosense.infrastructure.external.base import PublicDataConnector
 from biosense.infrastructure.external.seed_loader import load_seed_records
@@ -81,9 +85,9 @@ class KosisClient(PublicDataConnector):
                     continue
                 records.append(
                     RawCancerStatRecord(
-                        region_code=_map_region_name_to_code(region),
+                        region_code=normalize_region_code(region),
                         region_name_ko=region,
-                        cancer_type=_normalize_cancer_type(cancer),
+                        cancer_type=normalize_cancer_type(cancer),
                         incidence_rate=_to_decimal(value),
                         mortality_rate=None,
                         data_year=year,
@@ -239,9 +243,9 @@ def _parse_kdca_payload(
             continue
         records.append(
             RawCancerStatRecord(
-                region_code=_map_region_name_to_code(region),
+                region_code=normalize_region_code(region),
                 region_name_ko=region,
-                cancer_type=_normalize_cancer_type(cancer),
+                cancer_type=normalize_cancer_type(cancer),
                 incidence_rate=incidence,
                 mortality_rate=mortality,
                 data_year=int(row.get("year") or row.get("dataYear") or year),
@@ -291,49 +295,3 @@ def _to_decimal(value: object) -> Decimal | None:
         return None
 
 
-def _normalize_cancer_type(name: str) -> str:
-    mapping = {
-        "폐": "lung",
-        "lung": "lung",
-        "대장": "colorectal",
-        "colorectal": "colorectal",
-        "유방": "breast",
-        "breast": "breast",
-        "간": "liver",
-        "liver": "liver",
-        "위": "stomach",
-        "stomach": "stomach",
-        "췌장": "pancreatic",
-        "pancreatic": "pancreatic",
-    }
-    lowered = name.lower()
-    for key, code in mapping.items():
-        if key in lowered:
-            return code
-    return "other"
-
-
-def _map_region_name_to_code(name: str) -> str:
-    region_map = {
-        "서울": "KR-11",
-        "부산": "KR-26",
-        "대구": "KR-27",
-        "인천": "KR-28",
-        "광주": "KR-29",
-        "대전": "KR-30",
-        "울산": "KR-31",
-        "경기": "KR-41",
-        "강원": "KR-42",
-        "충북": "KR-43",
-        "충남": "KR-44",
-        "전북": "KR-45",
-        "전남": "KR-46",
-        "경북": "KR-47",
-        "경남": "KR-48",
-        "제주": "KR-49",
-        "세종": "KR-50",
-    }
-    for key, code in region_map.items():
-        if key in name:
-            return code
-    return "KR-00"
