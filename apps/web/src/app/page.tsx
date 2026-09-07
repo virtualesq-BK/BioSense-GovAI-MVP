@@ -25,6 +25,29 @@ const FEATURES: { icon: typeof Sparkles; titleKey: TranslationKey; descriptionKe
   { icon: Activity, titleKey: 'landing.feature6.title', descriptionKey: 'landing.feature6.description' }
 ];
 
+const CONCEPT_DIAGRAMS: { src: string; titleKey: TranslationKey; descriptionKey: TranslationKey }[] = [
+  {
+    src: '/diagrams/biosensor-signal-pipeline.svg',
+    titleKey: 'landing.diagrams.signalPipeline.title',
+    descriptionKey: 'landing.diagrams.signalPipeline.description'
+  },
+  {
+    src: '/diagrams/multi-omics-biomarker.svg',
+    titleKey: 'landing.diagrams.multiOmics.title',
+    descriptionKey: 'landing.diagrams.multiOmics.description'
+  },
+  {
+    src: '/diagrams/liquid-biopsy-lab-on-chip.svg',
+    titleKey: 'landing.diagrams.labOnChip.title',
+    descriptionKey: 'landing.diagrams.labOnChip.description'
+  },
+  {
+    src: '/diagrams/biosensor-workflow.svg',
+    titleKey: 'landing.diagrams.workflow.title',
+    descriptionKey: 'landing.diagrams.workflow.description'
+  }
+];
+
 const WORKFLOW_STEPS: { step: string; titleKey: TranslationKey; descriptionKey: TranslationKey }[] = [
   { step: '01', titleKey: 'landing.workflow.step1.title', descriptionKey: 'landing.workflow.step1.description' },
   { step: '02', titleKey: 'landing.workflow.step2.title', descriptionKey: 'landing.workflow.step2.description' },
@@ -45,6 +68,9 @@ export default function LandingPage() {
           <nav className="hidden items-center gap-6 text-sm text-[var(--muted-foreground)] md:flex">
             <a href="#features" className="hover:text-[var(--foreground)]">
               {t('landing.nav.features')}
+            </a>
+            <a href="#diagrams" className="hover:text-[var(--foreground)]">
+              {t('landing.diagrams.title')}
             </a>
             <a href="#workflow" className="hover:text-[var(--foreground)]">
               {t('landing.nav.workflow')}
@@ -111,6 +137,30 @@ export default function LandingPage() {
                 <h3 className="font-semibold">{t(titleKey)}</h3>
                 <p className="mt-2 text-sm text-[var(--muted-foreground)]">{t(descriptionKey)}</p>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="diagrams" className="py-20">
+        <div className="mx-auto max-w-6xl px-4 lg:px-8">
+          <h2 className="text-center text-2xl font-bold sm:text-3xl">{t('landing.diagrams.title')}</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-[var(--muted-foreground)]">
+            {t('landing.diagrams.description')}
+          </p>
+          <div className="mt-12 grid gap-6 sm:grid-cols-2">
+            {CONCEPT_DIAGRAMS.map(({ src, titleKey, descriptionKey }) => (
+              <figure
+                key={src}
+                className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt={t(titleKey)} className="aspect-[16/9] w-full object-contain p-4" />
+                <figcaption className="border-t border-[var(--border)] bg-[var(--card)] p-4">
+                  <p className="font-semibold">{t(titleKey)}</p>
+                  <p className="mt-1 text-sm text-[var(--muted-foreground)]">{t(descriptionKey)}</p>
+                </figcaption>
+              </figure>
             ))}
           </div>
         </div>

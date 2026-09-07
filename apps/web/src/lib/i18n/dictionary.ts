@@ -325,6 +325,31 @@ export const dictionary = {
     ko: '데이터 수집 파이프라인·문헌 인덱싱 상태 대시보드',
     en: 'Dashboard for data ingestion pipeline and literature indexing status'
   },
+  'landing.diagrams.title': { ko: '바이오센서 설계 개념도', en: 'Biosensor Design Concepts' },
+  'landing.diagrams.description': {
+    ko: 'BioSense-GovAI가 근거로 삼는 바이오센서 신호 변환, 멀티오믹스 바이오마커 발굴, 액체생검 랩온어칩, 생체인식-트랜스듀서 워크플로의 핵심 개념입니다.',
+    en: 'The core biosensor signal transduction, multi-omics biomarker discovery, liquid-biopsy lab-on-a-chip, and biorecognition-transducer workflow concepts that BioSense-GovAI designs against.'
+  },
+  'landing.diagrams.signalPipeline.title': { ko: '바이오센서 신호 변환 경로', en: 'Biosensor Signal Transduction Path' },
+  'landing.diagrams.signalPipeline.description': {
+    ko: '분자 인식 → 신호 변환 → 신호 기록/디스플레이로 이어지는 전기화학 바이오센서의 기본 구조',
+    en: 'The core electrochemical biosensor chain: molecular recognition → signal transformation → signal recording and display'
+  },
+  'landing.diagrams.multiOmics.title': { ko: '멀티오믹스 바이오마커 발굴', en: 'Multi-Omics Biomarker Discovery' },
+  'landing.diagrams.multiOmics.description': {
+    ko: 'DNA·RNA·단백질·대사체 각 오믹스 계층을 생물정보학·생물통계학으로 통합해 바이오마커를 도출',
+    en: 'Integrating genomics, transcriptomics, proteomics, and metabolomics via bioinformatics and biostatistics to derive biomarkers'
+  },
+  'landing.diagrams.labOnChip.title': { ko: '액체생검 기반 Lab-on-a-Chip', en: 'Liquid-Biopsy Lab-on-a-Chip' },
+  'landing.diagrams.labOnChip.description': {
+    ko: '환자 혈액 샘플에서 ctDNA/CTC/엑소좀을 포집·분석해 다시 임상 판단으로 순환하는 흐름',
+    en: 'Capturing and analyzing ctDNA/CTCs/exosomes from a patient blood sample, feeding back into clinical decisions'
+  },
+  'landing.diagrams.workflow.title': { ko: '생체인식-트랜스듀서 워크플로', en: 'Biorecognition–Transducer Workflow' },
+  'landing.diagrams.workflow.description': {
+    ko: '검체(타액/혈액/소변)에서 생체인식 소자(핵산·압타머·엑소좀·단백질·항체)를 거쳐 전기화학/광학/압전/FET 트랜스듀서로 신호를 처리',
+    en: 'From sample (saliva/blood/urine) through biorecognition elements (nucleic acid, aptamer, exosome, protein, antibody) to electrochemical/optical/piezoelectric/FET transducers'
+  },
   'landing.workflow.title': { ko: '워크플로', en: 'Workflow' },
   'landing.workflow.step1.title': { ko: '케이스 입력', en: 'Case Input' },
   'landing.workflow.step1.description': {

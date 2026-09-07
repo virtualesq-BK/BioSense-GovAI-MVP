@@ -4,6 +4,16 @@
 
 AI-powered **biomarker–biosensor co-design** SaaS platform for early cancer detection, combining ctDNA molecular characteristics, Korean public health statistics, and literature-backed evidence.
 
+| Signal transduction | Multi-omics discovery |
+|---|---|
+| ![Biosensor signal transduction](docs/assets/biosensor-signal-pipeline.svg) | ![Multi-omics biomarker discovery](docs/assets/multi-omics-biomarker.svg) |
+
+| Liquid-biopsy lab-on-a-chip | Biorecognition–transducer workflow |
+|---|---|
+| ![Liquid biopsy lab-on-a-chip](docs/assets/liquid-biopsy-lab-on-chip.svg) | ![Biosensor workflow](docs/assets/biosensor-workflow.svg) |
+
+These four concept diagrams are also rendered on the app's landing page (`/`, "Biosensor Design Concepts" section) and live as SVG assets under [`docs/assets/`](docs/assets) / [`apps/web/public/diagrams/`](apps/web/public/diagrams).
+
 ---
 
 <a id="한국어"></a>
@@ -159,7 +169,44 @@ docs/           # 아키텍처 및 로드맵 문서
 - [디렉터리 구조](docs/DIRECTORY_STRUCTURE.md)
 - [Supabase 설정](docs/SUPABASE.md)
 
-### 9. 라이선스
+### 9. Multi-Omics R&D 고도화 현황 (Phase 1 – Phase 2)
+
+`Cancer → Multi-Omics Data → Biomarker Candidate → Molecular Characterization → Molecular Recognition → Signal Transduction → Biosensor Design → Evidence-backed Recommendation` 파이프라인으로의 확장이 단계적으로 진행 중입니다. **이 시스템은 진단 시스템이 아니며, 모든 결과는 연구 지원용(research support only)이고 실험적 검증이 필요합니다.**
+
+**Phase 1 — 파이프라인 골격 구축**
+Mutation 차원(ctDNA), DNA 하이브리다이제이션, CRISPR-Cas(휴리스틱), 전기화학 센서를 하나의 파이프라인으로 연결하고 `/v1/rnd/design`에 통합. Biomarker 3-dimension 모델(Mutation/Methylation/Fragmentomics), 분자적 특성화(molecular_characterization), 분자 인식 엔진(molecular_recognition), 센서 트랜스듀서 엔진(sensor_transduction), 6-factor R&D 스코어링, 경량 온톨로지 매핑 도입.
+
+**Phase 1.5 — 과학적 엄밀성 보강 (하드닝)**
+- 미구현 항목을 "supported"로 표기하지 않도록 UI 문구를 "planned / architecture-ready / not yet implemented"로 정정
+- `BiomarkerEvidenceStatus`(SUPPORTED/PARTIALLY_SUPPORTED/INSUFFICIENT_EVIDENCE/PLANNED) 도입, 각 상태에 근거(reason) 명시
+- 신규 `molecular_detectability` 도메인 도입 — "바이오마커가 존재하는가"와 "실제로 검출 가능한가"를 구분, 데이터 없는 항목은 절대 숫자를 지어내지 않고 `unknown`으로 처리
+- 인식 전략 결정 흐름을 `Biomarker → Molecular Characteristics → Detectability → Recognition Strategy`로 강제 (바이오마커 이름만으로 즉시 추천하지 않음)
+- 인식 적합성 매트릭스를 evidence_level/source/rationale/confidence를 갖는 데이터로 외부화(생물학적 정설로 취급하지 않음)
+- 근거 출처(Evidence Provenance) 필드 확장: dataset, original_identifier, access_date, access_level, evidence_type
+- Score(순위용)와 Confidence(근거 강도)를 명확히 분리, R&D 스코어링 가중치는 "초기 휴리스틱 가중치 — 검증되지 않음"으로 명시
+- 근거 배제 후 재계산하는 counterfactual(evidence sensitivity) 스캐폴드 도입
+- "근거 불충분(Insufficient evidence) 상태가 실수로 높은 신뢰도로 둔갑하지 않는지" 검증하는 회귀 테스트 추가
+- 178개 테스트 통과 (기존 160 + 신규 18), 회귀 없음
+
+**Phase 2 — 실데이터 연동 (Feasibility Audit 우선)**
+구현 전 `docs/data-feasibility-phase2.md`로 NCI GDC/TCGA·PubMed·Europe PMC의 실제 API 구조를 먼저 검증(가정으로 진행하지 않음). 검증 결과에 따라 범위를 정직하게 축소:
+- **Methylation = 메타데이터 전용 연동.** GDC `/files`, `/projects` API는 파일 단위 메타데이터(플랫폼, 접근 등급, 케이스 수)만 제공하며 실제 CpG-site/beta value는 제공하지 않음(원시 파일 다운로드·오프라인 처리가 별도로 필요, 현재 범위 밖). LUAD/LUSC/COAD/READ/BRCA 5개 TCGA 코호트의 오픈 액세스 메틸레이션 파일 존재를 실제 API로 확인. 근거 상태는 파일이 있으면 `PARTIALLY_SUPPORTED`, 없으면 `INSUFFICIENT_EVIDENCE`이며 **절대 `SUPPORTED`로 표시하지 않음**.
+- **CRISPR-Cas = 인용 문헌 연동.** PubMed/Europe PMC에서 실제 인용(PMID/DOI 등)을 조회해 추천에 연결하되, 논문에서 LOD/민감도/특이도 등 수치를 자동 추출하지 않음(수동 큐레이션 필요). 근거 상태는 인용 발견 시 `HEURISTIC_WITH_CITATIONS`, 없으면 기존과 동일한 `HEURISTIC`.
+- 신규 `GET /v1/biomarkers/methylation-evidence` 엔드포인트, 내부 전용 근거 등급 체계(LEVEL_A–E/UNKNOWN, 외부 과학 표준 아님을 명시), `docs/scoring-calibration.md`(실제 벤치마크 데이터셋이 아직 없어 스코어링 가중치 보정은 보류함을 명시)
+- 191개 테스트 통과 (기존 178 + 신규 13), 회귀 없음
+
+**현재 구현 상태 요약**
+
+| 구분 | 항목 |
+|------|------|
+| 실제 구현(Evidence-backed) | Mutation 특성화, DNA 하이브리다이제이션, 전기화학 센서, GDC 메틸레이션 메타데이터 검색 |
+| 휴리스틱 / 인용 보강 | CRISPR-Cas 인식(휴리스틱 스코어링 + 실제 문헌 인용 부착) |
+| 부분 지원 | Methylation (파일/프로젝트 단위 메타데이터만, 정량값 없음) |
+| 계획됨 (미구현) | Fragmentomics, Expression/Protein/Fusion/Copy-number 차원, Aptamer/Antibody/Affinity 인식, Optical/SERS/SPR/Fluorescence 센서 |
+
+**다음 단계 후보 (Phase 3)**: 메틸레이션 원시 파일(IDAT/TXT) 다운로드·파싱 파이프라인, CRISPR 구조화 근거(LOD/민감도 등)의 전문가 수동 큐레이션, 스코어링 보정을 위한 실제 벤치마크 데이터셋 구축.
+
+### 10. 라이선스
 
 Proprietary — BioSense-GovAI
 
@@ -318,6 +365,43 @@ docs/           # Architecture & roadmap docs
 - [Directory Structure](docs/DIRECTORY_STRUCTURE.md)
 - [Supabase Setup](docs/SUPABASE.md)
 
-### 9. License
+### 9. Multi-Omics R&D Development Status (Phase 1 – Phase 2)
+
+The platform is being extended, in stages, toward the pipeline `Cancer → Multi-Omics Data → Biomarker Candidate → Molecular Characterization → Molecular Recognition → Signal Transduction → Biosensor Design → Evidence-backed Recommendation`. **This is not a diagnostic system — every output is research support only and requires experimental validation.**
+
+**Phase 1 — Pipeline skeleton**
+Connected the mutation dimension (ctDNA), DNA hybridization, CRISPR-Cas (heuristic), and an electrochemical sensor into one pipeline wired into `/v1/rnd/design`. Introduced the 3-dimension biomarker model (Mutation/Methylation/Fragmentomics), a molecular characterization module, a molecular recognition engine, a sensor transduction engine, a 6-factor R&D scoring engine, and a lightweight ontology mapping layer.
+
+**Phase 1.5 — Scientific hardening**
+- Corrected UI wording so unimplemented items are never labeled "supported" — now "planned / architecture-ready / not yet implemented"
+- Added `BiomarkerEvidenceStatus` (SUPPORTED/PARTIALLY_SUPPORTED/INSUFFICIENT_EVIDENCE/PLANNED), each with a stated reason
+- Added a new `molecular_detectability` domain, distinguishing "does the biomarker exist" from "can it actually be detected" — unbacked attributes stay `unknown`, never a fabricated number
+- Recognition strategy selection now strictly flows `Biomarker → Molecular Characteristics → Detectability → Recognition Strategy` (never decided from biomarker name/type alone)
+- Externalized the recognition-compatibility matrix as data carrying evidence_level/source/rationale/confidence (never treated as settled biology)
+- Extended evidence provenance fields: dataset, original_identifier, access_date, access_level, evidence_type
+- Explicitly separated Score (ranking) from Confidence (evidence strength); R&D scoring weights are labeled "initial heuristic weights — not empirically validated"
+- Added a counterfactual/evidence-sensitivity scaffold that recomputes recommendations with one evidence source masked
+- Added a regression test guaranteeing "insufficient evidence" can never be silently upgraded to a high-confidence result
+- 178 tests passing (160 baseline + 18 new), zero regressions
+
+**Phase 2 — Real data integration (feasibility-audit-first)**
+Before writing any implementation code, `docs/data-feasibility-phase2.md` verified the actual NCI GDC/TCGA, PubMed, and Europe PMC API structures against live documentation and endpoints (no assumptions). Scope was honestly narrowed based on those findings:
+- **Methylation = metadata-only integration.** The GDC `/files` and `/projects` APIs return only file-level metadata (platform, access tier, case counts) — not real CpG-site IDs or beta values, which would require downloading and offline-processing raw files (out of current scope). Open-access methylation files were confirmed live for all 5 target TCGA cohorts (LUAD, LUSC, COAD, READ, BRCA). Evidence status is `PARTIALLY_SUPPORTED` when files exist, `INSUFFICIENT_EVIDENCE` otherwise — **never `SUPPORTED`**.
+- **CRISPR-Cas = citation-linked evidence.** Real citations (PMID/DOI) from PubMed/Europe PMC are now attached to recommendations, but no LOD/sensitivity/specificity values are auto-extracted from paper text (that needs manual curation). Evidence status becomes `HEURISTIC_WITH_CITATIONS` when citations are found, otherwise remains plain `HEURISTIC` as before.
+- Added `GET /v1/biomarkers/methylation-evidence`, an internal-only evidence-hierarchy scale (LEVEL_A–E/UNKNOWN, explicitly not an external scientific standard), and `docs/scoring-calibration.md` (states plainly that no real benchmark dataset exists yet, so scoring weights remain uncalibrated rather than guessed)
+- 191 tests passing (178 baseline + 13 new), zero regressions
+
+**Current implementation snapshot**
+
+| Category | Items |
+|----------|-------|
+| Evidence-backed | Mutation characterization, DNA hybridization, electrochemical sensor, GDC methylation metadata search |
+| Heuristic / citation-augmented | CRISPR-Cas recognition (heuristic scoring + real literature citations) |
+| Partially supported | Methylation (file/project-level metadata only, no quantitative values) |
+| Planned (not implemented) | Fragmentomics; expression/protein/fusion/copy-number dimensions; aptamer/antibody/affinity recognition; optical/SERS/SPR/fluorescence sensors |
+
+**Candidate next steps (Phase 3)**: a real bulk methylation processing pipeline (IDAT/TXT parsing), expert manual curation of structured CRISPR evidence (LOD, sensitivity, etc.), and building a real benchmark dataset for score calibration.
+
+### 10. License
 
 Proprietary — BioSense-GovAI
