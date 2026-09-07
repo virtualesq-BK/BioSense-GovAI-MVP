@@ -19,6 +19,11 @@ class DataSourceInfo:
     license: str
     update_method: str
     url: str
+    # Additive (Phase 1.5) role-model fields — optional/defaulted so this
+    # stays backward compatible with any existing consumer of DATA_SOURCES.
+    layer: str | None = None  # "population" | "molecular" | "evidence" | "sensor"
+    role: str | None = None  # what this source is used for in the pipeline
+    access_level: str | None = None  # "public" | "open_with_citation" | "controlled_access"
 
 
 DATA_SOURCES: tuple[DataSourceInfo, ...] = (
@@ -30,6 +35,9 @@ DATA_SOURCES: tuple[DataSourceInfo, ...] = (
         license="Korea Open Government License (KOGL)",
         update_method="On-demand API call, cached; falls back to seed data if unavailable",
         url="https://kosis.kr/openapi/",
+        layer="population",
+        role="National/regional population and demographic denominators for incidence/mortality rates.",
+        access_level="public",
     ),
     DataSourceInfo(
         name="KDCA",
@@ -39,6 +47,9 @@ DATA_SOURCES: tuple[DataSourceInfo, ...] = (
         license="Public data terms of use (data.go.kr)",
         update_method="On-demand API call, cached; falls back to seed data if unavailable",
         url="https://health.kdca.go.kr/",
+        layer="population",
+        role="Regional/national cancer incidence and mortality statistics (epidemiological evidence layer).",
+        access_level="public",
     ),
     DataSourceInfo(
         name="NCI GDC",
@@ -49,6 +60,9 @@ DATA_SOURCES: tuple[DataSourceInfo, ...] = (
         "separate dbGaP authorization (not integrated)",
         update_method="Live query per request (no local caching of GDC data)",
         url="https://gdc.cancer.gov/",
+        layer="molecular",
+        role="Gene/mutation records and mutation counts used by Molecular Characterization and Detectability.",
+        access_level="open_with_citation",
     ),
     DataSourceInfo(
         name="PubMed",
@@ -58,6 +72,9 @@ DATA_SOURCES: tuple[DataSourceInfo, ...] = (
         license="Public domain / NLM terms of use",
         update_method="Scheduled + on-demand harvest via E-utilities",
         url="https://pubmed.ncbi.nlm.nih.gov/",
+        layer="evidence",
+        role="Literature citations linked to biomarkers, feeding evidence/published-evidence scoring.",
+        access_level="public",
     ),
     DataSourceInfo(
         name="Europe PMC",
@@ -67,6 +84,9 @@ DATA_SOURCES: tuple[DataSourceInfo, ...] = (
         license="Source-dependent; EBI Privacy Notice governs API use",
         update_method="On-demand harvest via REST API",
         url="https://europepmc.org/",
+        layer="evidence",
+        role="Supplementary literature citations linked to biomarkers.",
+        access_level="public",
     ),
     DataSourceInfo(
         name="CDC USCS (United States Cancer Statistics)",
@@ -77,5 +97,18 @@ DATA_SOURCES: tuple[DataSourceInfo, ...] = (
         update_method="Not integrated — no automatable API exists (see docs/data-access.md); "
         "linked as an external reference only",
         url="https://wonder.cdc.gov/cancer-v2022.html",
+        layer="population",
+        role="US population-level cancer statistics, referenced but not queried live.",
+        access_level="public",
     ),
 )
+
+
+def sources_for_layer(layer: str) -> tuple[DataSourceInfo, ...]:
+    """All registered sources for a given pipeline layer
+    (population|molecular|evidence|sensor). No sensor-layer source is
+    registered yet — Phase 1 sensor data comes entirely from the internal
+    Postgres domain graph (recognition_sensor_uses / sensor_performances),
+    not an external source, so an empty tuple there is accurate, not a gap.
+    """
+    return tuple(s for s in DATA_SOURCES if s.layer == layer)

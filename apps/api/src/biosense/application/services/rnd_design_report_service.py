@@ -24,6 +24,7 @@ from biosense.application.services.graph_retrieval_service import (
     GraphRetrievalService,
     PublicHealthFeatureService,
 )
+from biosense.application.services.phase1_pipeline_service import Phase1PipelineService
 from biosense.domain.entities.recommendation import GraphCandidate, RecommendationInput
 from biosense.domain.entities.rnd_report import (
     EpidemiologicalEvidence,
@@ -66,6 +67,7 @@ class RndDesignReportService:
         self._priority = BiomarkerPriorityService(session, gdc=gdc)
         self._features = FeatureExtractionService()
         self._gdc = gdc or GdcClient()
+        self._phase1 = Phase1PipelineService(session, gdc=self._gdc)
 
     async def generate(self, inp: RndDesignInput) -> RndDesignReport:
         country_code = normalize_country(inp.country)
@@ -86,6 +88,7 @@ class RndDesignReportService:
         recognition_strategy: str | None = None
         experimental_hypothesis: ExperimentalDesignHypothesis | None = None
         existing_evidence: list[ReferenceEntry] = []
+        biomarker_row: Biomarker | None = None
 
         if top is not None and cancer is not None:
             biomarker_row = await self._load_biomarker(top.biomarker_name)
@@ -159,6 +162,12 @@ class RndDesignReportService:
         if molecular.gene_symbol:
             references.append(f"NCI GDC gene record: {molecular.gene_symbol}")
 
+        phase1_result = await self._phase1.run(
+            biomarker=biomarker_row,
+            cancer_code=cancer_code,
+            priority_score=top,
+        )
+
         logger.info(
             "rnd_design_report_generated",
             country=country_code,
@@ -181,6 +190,12 @@ class RndDesignReportService:
             experimental_design_hypothesis=experimental_hypothesis,
             data_limitations=limitations,
             references=references,
+            phase1_molecular_characterization=phase1_result.molecular_characterization,
+            phase1_detectability=phase1_result.detectability,
+            phase1_recognition_recommendations=phase1_result.recognition_recommendations,
+            phase1_sensor_transduction_candidates=phase1_result.sensor_transduction_candidates,
+            phase1_composite_score=phase1_result.composite_score,
+            phase1_disclaimers=phase1_result.disclaimers,
         )
 
     async def _build_epidemiology(

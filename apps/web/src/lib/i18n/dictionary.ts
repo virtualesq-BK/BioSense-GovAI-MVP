@@ -387,7 +387,17 @@ export const dictionary = {
   'rndDesign.measured': { ko: '실측값', en: 'Measured' },
   'rndDesign.aiSuggested': { ko: 'AI 제안 (미검증)', en: 'AI-suggested (unvalidated)' },
   'rndDesign.curatedProtocol': { ko: '기존 프로토콜', en: 'Curated protocol' },
-  'rndDesign.regionAverage': { ko: '전국 평균', en: 'National average' }
+  'rndDesign.regionAverage': { ko: '전국 평균', en: 'National average' },
+  'rndDesign.workflow.title': { ko: '바이오센서 파이프라인', en: 'Biosensor Pipeline' },
+  'rndDesign.workflow.description': {
+    ko: '검체 → 생체 인식 → 트랜스듀서 → 신호 판독 흐름으로 이 설계가 어디까지 근거를 확보했는지 보여줍니다.',
+    en: 'Sample → biorecognition → transducer → signal readout — shows how far this design is backed by real evidence.'
+  },
+  'rndDesign.workflow.sample': { ko: '검체/적응증', en: 'Sample / Target' },
+  'rndDesign.workflow.recognition': { ko: '생체 인식', en: 'Biorecognition' },
+  'rndDesign.workflow.transducer': { ko: '트랜스듀서', en: 'Transducer' },
+  'rndDesign.workflow.signal': { ko: '신호 판독', en: 'Signal Readout' },
+  'rndDesign.workflow.sensitivity': { ko: '민감도', en: 'Sensitivity' }
 } as const satisfies Record<string, Record<Locale, string>>;
 
 export type TranslationKey = keyof typeof dictionary;

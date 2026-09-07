@@ -1,7 +1,19 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { AlertTriangle, BookOpen, FlaskConical } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowRight,
+  Atom,
+  BookOpen,
+  Dna,
+  Droplets,
+  FlaskConical,
+  MonitorSmartphone,
+  Radio,
+  Waves,
+  Zap
+} from 'lucide-react';
 import { PageLayout } from '@/components/layout/page-layout';
 import { LoadingOverlay } from '@/components/common/loading';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,14 +56,20 @@ const CANCERS: Record<Locale, { value: string; label: string }[]> = {
   ]
 };
 
+// Only 'mutation' is implemented end-to-end (real GDC/literature-backed
+// characterization, DNA-hybridization/CRISPR-Cas recognition, electrochemical
+// sensor scoring). The others are documented biomarker classes reserved for
+// later phases; selecting one currently returns a "not yet implemented"
+// response from the API rather than a fabricated result, so we label them
+// "(planned)" here rather than implying they are supported today.
 const CTDNA_CLASSES = [
-  'mutation',
-  'methylation',
-  'fragmentomics',
-  'cnv',
-  'exosomal_mirna',
-  'ctc',
-  'multi_omics'
+  { value: 'mutation', status: null },
+  { value: 'methylation', status: 'partial' },
+  { value: 'fragmentomics', status: 'planned' },
+  { value: 'cnv', status: 'planned' },
+  { value: 'exosomal_mirna', status: 'planned' },
+  { value: 'ctc', status: 'planned' },
+  { value: 'multi_omics', status: 'planned' }
 ];
 
 const DEFAULT_FORM: RndDesignRequest = {
@@ -98,11 +116,11 @@ export default function RndDesignPage() {
   return (
     <PageLayout title={t('rndDesign.title')} description={t('rndDesign.description')}>
       <div className="grid gap-6 lg:grid-cols-5">
-        <Card className="lg:col-span-2">
-          <CardHeader>
+        <Card className="border-[var(--border)] lg:sticky lg:top-6 lg:col-span-2 lg:h-fit">
+          <CardHeader className="border-b border-[var(--border)]">
             <CardTitle>{t('rndDesign.caseInput')}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-4">
             <Field label={t('rndDesign.field.cancer')}>
               <Select
                 value={form.cancer}
@@ -122,8 +140,12 @@ export default function RndDesignPage() {
               >
                 <option value="">{t('rndDesign.field.biomarkerType.any')}</option>
                 {CTDNA_CLASSES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
+                  <option key={c.value} value={c.value}>
+                    {c.status === 'partial'
+                      ? `${c.value} (partially supported — GDC file-level metadata only, no quantitative characterization yet)`
+                      : c.status
+                        ? `${c.value} (planned — not yet implemented)`
+                        : c.value}
                   </option>
                 ))}
               </Select>
@@ -230,6 +252,8 @@ function ReportView({
           </Badge>
         </CardHeader>
       </Card>
+
+      <WorkflowDiagram report={report} t={t} />
 
       <Section title={t('rndDesign.section.epidemiology')}>
         {epi.missing_data ? (
@@ -356,6 +380,109 @@ function ReportView({
         </Section>
       )}
     </div>
+  );
+}
+
+// Biosensor pipeline visual, modeled on the standard
+// sample → biorecognition → transducer → signal-readout workflow used across
+// the electrochemical-biosensor literature. Each stage lights up once the
+// report contains real data for it, so the diagram doubles as a progress map
+// for what has actually been characterized vs. still pending.
+const TRANSDUCER_ICONS: Record<string, typeof Zap> = {
+  electrochemical: Zap,
+  optical: Radio,
+  piezoelectric: Waves,
+  fet: Atom,
+  'fet-based': Atom
+};
+
+function WorkflowDiagram({
+  report,
+  t
+}: {
+  report: RndDesignReport;
+  t: ReturnType<typeof useLanguage>['t'];
+}) {
+  const hasMolecular = !report.molecular_characteristics.missing_data;
+  const hasRecognition = Boolean(report.recognition_strategy);
+  const topSensor = report.sensor_candidates[0];
+  const transducerKey = topSensor?.sensor_type?.toLowerCase().trim();
+  const TransducerIcon = (transducerKey && TRANSDUCER_ICONS[transducerKey]) || MonitorSmartphone;
+  const hasSignal = Boolean(topSensor);
+
+  const stages = [
+    {
+      key: 'sample',
+      icon: Droplets,
+      label: t('rndDesign.workflow.sample'),
+      detail: report.target_disease,
+      active: true
+    },
+    {
+      key: 'recognition',
+      icon: Dna,
+      label: t('rndDesign.workflow.recognition'),
+      detail: report.recognition_strategy ?? t('rndDesign.missingData'),
+      active: hasMolecular || hasRecognition
+    },
+    {
+      key: 'transducer',
+      icon: TransducerIcon,
+      label: t('rndDesign.workflow.transducer'),
+      detail: topSensor?.sensor_name ?? t('rndDesign.missingData'),
+      active: hasSignal
+    },
+    {
+      key: 'signal',
+      icon: MonitorSmartphone,
+      label: t('rndDesign.workflow.signal'),
+      detail:
+        topSensor?.sensitivity != null
+          ? `${t('rndDesign.workflow.sensitivity')} ${formatPercent(topSensor.sensitivity)}`
+          : t('rndDesign.missingData'),
+      active: topSensor?.sensitivity != null
+    }
+  ];
+
+  return (
+    <Card className="overflow-hidden border-[var(--border)]">
+      <CardHeader className="border-b border-[var(--border)] bg-[var(--muted)]/40 pb-3">
+        <CardTitle className="text-base">{t('rndDesign.workflow.title')}</CardTitle>
+        <CardDescription>{t('rndDesign.workflow.description')}</CardDescription>
+      </CardHeader>
+      <CardContent className="py-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch sm:gap-0">
+          {stages.map((stage, i) => (
+            <div key={stage.key} className="flex flex-1 items-center">
+              <div
+                className={`flex w-full flex-col items-center gap-2 rounded-xl border px-3 py-4 text-center transition-colors ${
+                  stage.active
+                    ? 'border-cyan-500/40 bg-cyan-500/5'
+                    : 'border-[var(--border)] bg-[var(--muted)]/30 opacity-60'
+                }`}
+              >
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                    stage.active
+                      ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-300'
+                      : 'bg-[var(--muted)] text-[var(--muted-foreground)]'
+                  }`}
+                >
+                  <stage.icon className="h-5 w-5" />
+                </div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+                  {stage.label}
+                </p>
+                <p className="line-clamp-2 text-sm font-medium">{stage.detail}</p>
+              </div>
+              {i < stages.length - 1 && (
+                <ArrowRight className="mx-1 hidden h-5 w-5 shrink-0 text-[var(--muted-foreground)] sm:block" />
+              )}
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

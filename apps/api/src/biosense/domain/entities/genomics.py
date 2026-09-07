@@ -39,3 +39,23 @@ class RawGdcMutationRecord:
     amino_acid_changes: list[str] = field(default_factory=list)
     source: str = "gdc"
     access_level: str = "open"
+
+
+@dataclass(frozen=True)
+class RawGdcMethylationFileRecord:
+    """FILE-LEVEL metadata for a methylation array file from the GDC /files
+    endpoint — verified (Phase 2 Step 0 audit, docs/data-feasibility-phase2.md)
+    to expose only file/platform/case-level metadata via REST, never actual
+    CpG-site IDs or beta values. This record type carries only what the API
+    actually returns; do not add quantitative fields to it.
+    """
+
+    file_id: str
+    file_name: str | None
+    data_type: str | None  # e.g. "Methylation Beta Value"
+    platform: str | None  # e.g. "Illumina Human Methylation 450"
+    access: str | None  # "open" or "controlled"
+    project_id: str | None  # e.g. "TCGA-LUAD"
+    case_count: int | None
+    sample_types: list[str] = field(default_factory=list)
+    source: str = "gdc"

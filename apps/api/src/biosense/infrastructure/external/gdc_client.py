@@ -21,6 +21,7 @@ import structlog
 from biosense.config import settings
 from biosense.domain.entities.genomics import (
     RawGdcGeneRecord,
+    RawGdcMethylationFileRecord,
     RawGdcMutationRecord,
     RawGdcProjectRecord,
 )
@@ -167,6 +168,52 @@ class GdcClient(PublicDataConnector):
             logger.error("gdc_search_mutations_failed", gene_symbol=gene_symbol, error=str(exc))
             return []
 
+    async def search_methylation_files(
+        self, *, project_id: str, size: int = 20
+    ) -> list[RawGdcMethylationFileRecord]:
+        """FILE-LEVEL methylation array discovery via GET /files (metadata only).
+
+        Per the Phase 2 Step 0 audit (docs/data-feasibility-phase2.md), the GDC
+        REST API exposes only file/platform/case-level metadata for methylation
+        — file_id, data_type, platform, access, case/project linkage. There is
+        no field for actual CpG-site IDs or beta values via this endpoint; those
+        require downloading/parsing TXT/IDAT files offline, which is explicitly
+        out of scope here. Never populate a quantitative value from this method.
+        """
+        filters = {
+            "op": "and",
+            "content": [
+                {
+                    "op": "in",
+                    "content": {"field": "cases.project.project_id", "value": [project_id]},
+                },
+                {
+                    "op": "in",
+                    "content": {"field": "data_type", "value": ["Methylation Beta Value"]},
+                },
+            ],
+        }
+
+        async def _call() -> list[RawGdcMethylationFileRecord]:
+            payload = await self._get(
+                "files",
+                fields=(
+                    "file_id,file_name,data_type,platform,access,"
+                    "cases.project.project_id,cases.samples.sample_type"
+                ),
+                filters=filters,
+                size=size,
+            )
+            return [_parse_methylation_file(hit) for hit in payload]
+
+        try:
+            return await with_retry(_call, operation_name="gdc_search_methylation_files")
+        except Exception as exc:
+            logger.error(
+                "gdc_search_methylation_files_failed", project_id=project_id, error=str(exc)
+            )
+            return []
+
     async def count_mutations_for_gene(self, gene_symbol: str) -> int | None:
         """Total number of recorded SSMs for a gene (not capped by page size).
 
@@ -264,5 +311,32 @@ def _parse_mutation(hit: dict) -> RawGdcMutationRecord:
         mutation_subtype=hit.get("mutation_subtype"),
         gene_symbols=gene_symbols,
         amino_acid_changes=aa_changes,
+        source=GdcClient.SOURCE,
+    )
+
+
+def _parse_methylation_file(hit: dict) -> RawGdcMethylationFileRecord:
+    project_id: str | None = None
+    sample_types: list[str] = []
+    case_count = 0
+    for case in hit.get("cases") or []:
+        case_count += 1
+        project = case.get("project") or {}
+        if project.get("project_id") and project_id is None:
+            project_id = project.get("project_id")
+        for sample in case.get("samples") or []:
+            st = sample.get("sample_type")
+            if st and st not in sample_types:
+                sample_types.append(st)
+
+    return RawGdcMethylationFileRecord(
+        file_id=hit.get("file_id") or hit.get("id", ""),
+        file_name=hit.get("file_name"),
+        data_type=hit.get("data_type"),
+        platform=hit.get("platform"),
+        access=hit.get("access"),
+        project_id=project_id,
+        case_count=case_count or None,
+        sample_types=sample_types,
         source=GdcClient.SOURCE,
     )

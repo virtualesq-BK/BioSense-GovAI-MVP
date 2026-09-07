@@ -8,6 +8,12 @@ fill a gap. Where evidence doesn't exist, the corresponding field is None/empty 
 
 from dataclasses import dataclass, field
 
+from biosense.domain.entities.molecular_characterization import MolecularCharacterizationResult
+from biosense.domain.entities.molecular_detectability import MolecularDetectabilityResult
+from biosense.domain.entities.molecular_recognition import RecognitionRecommendation
+from biosense.domain.entities.rd_scoring import RdCompositeScore
+from biosense.domain.entities.sensor_transduction import SensorTransductionCandidate
+
 
 @dataclass(frozen=True)
 class RndDesignInput:
@@ -91,3 +97,19 @@ class RndDesignReport:
     experimental_design_hypothesis: ExperimentalDesignHypothesis | None
     data_limitations: list[str] = field(default_factory=list)
     references: list[str] = field(default_factory=list)
+
+    # --- Phase 1 (Global Multi-Omics Bio R&D Infrastructure) additions ---
+    # Mutation/ctDNA dimension: Molecular Characterization -> Molecular Recognition
+    # (DNA hybridization / CRISPR-Cas) -> Sensor Transduction (electrochemical) ->
+    # composite score. All optional/None when Phase 1 doesn't apply (e.g. a
+    # non-mutation biomarker or no candidate at all) — never backfilled with guesses.
+    phase1_molecular_characterization: MolecularCharacterizationResult | None = None
+    phase1_detectability: MolecularDetectabilityResult | None = None
+    phase1_recognition_recommendations: list[RecognitionRecommendation] = field(
+        default_factory=list
+    )
+    phase1_sensor_transduction_candidates: list[SensorTransductionCandidate] = field(
+        default_factory=list
+    )
+    phase1_composite_score: RdCompositeScore | None = None
+    phase1_disclaimers: list[str] = field(default_factory=list)
