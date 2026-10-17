@@ -45,3 +45,6 @@ neo4j_data
 
 # TypeScript incremental build cache
 *.tsbuildinfo
+
+# Root workspace lock file (apps/web is the only workspace; lock lives there)
+/package-lock.json

@@ -17,6 +17,6 @@
     "docker:logs": "docker compose logs -f"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   }
 }
