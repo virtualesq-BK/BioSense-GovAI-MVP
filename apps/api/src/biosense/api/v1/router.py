@@ -8,6 +8,7 @@ from biosense.api.v1 import (
     ingestion,
     literature,
     recommendations,
+    reports,
     rnd,
     users,
 )
@@ -21,4 +22,5 @@ api_v1_router.include_router(recommendations.router)
 api_v1_router.include_router(graph.router)
 api_v1_router.include_router(catalog.router)
 api_v1_router.include_router(rnd.router)
+api_v1_router.include_router(reports.router)
 api_v1_router.include_router(biomarkers.router)

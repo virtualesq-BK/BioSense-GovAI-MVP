@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from biosense.api.dependencies import get_db_session
+from biosense.api.dependencies import get_db_session, rate_limit_expensive
 from biosense.application.dto.recommendation import (
     ExpectedMetricsResponse,
     GenerateRecommendationRequest,
@@ -14,7 +14,11 @@ from biosense.domain.entities.recommendation import RecommendationInput
 router = APIRouter(tags=["Recommendations"])
 
 
-@router.post("/recommendations/generate", response_model=GenerateRecommendationResponse)
+@router.post(
+    "/recommendations/generate",
+    response_model=GenerateRecommendationResponse,
+    dependencies=[Depends(rate_limit_expensive)],
+)
 async def generate_recommendations(
     body: GenerateRecommendationRequest,
     session: AsyncSession = Depends(get_db_session),

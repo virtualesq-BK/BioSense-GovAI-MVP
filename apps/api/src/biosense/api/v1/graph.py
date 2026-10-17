@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from biosense.api.dependencies import get_db_session
+from biosense.api.dependencies import get_db_session, require_admin
 from biosense.application.dto.ingestion import (
     GraphSyncDomainResponse,
     GraphSyncGeneRequest,
@@ -10,7 +10,9 @@ from biosense.application.dto.ingestion import (
 from biosense.application.services.knowledge_graph_sync_service import KnowledgeGraphSyncService
 from biosense.infrastructure.external.gdc_client import GdcClient
 
-router = APIRouter(prefix="/graph", tags=["Knowledge Graph"])
+router = APIRouter(
+    prefix="/graph", tags=["Knowledge Graph"], dependencies=[Depends(require_admin)]
+)
 
 
 @router.post("/sync/schema")

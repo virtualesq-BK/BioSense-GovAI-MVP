@@ -31,6 +31,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     const err = await res.text();
     throw new Error(err || `API error ${res.status}`);
   }
+  if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
 }
 
@@ -331,6 +332,23 @@ export const rndApi = {
       method: 'POST',
       body: JSON.stringify(body)
     })
+};
+
+export type ServerReport = {
+  id: string;
+  created_at: string;
+  input: GenerateRecommendationRequest;
+  recommendations: SensorRecommendation[];
+};
+
+export const reportsApi = {
+  list: () => apiFetch<ServerReport[]>('/v1/reports'),
+  create: (input: GenerateRecommendationRequest, recommendations: SensorRecommendation[]) =>
+    apiFetch<ServerReport>('/v1/reports', {
+      method: 'POST',
+      body: JSON.stringify({ input, recommendations })
+    }),
+  remove: (id: string) => apiFetch<void>(`/v1/reports/${encodeURIComponent(id)}`, { method: 'DELETE' })
 };
 
 export const healthApi = {

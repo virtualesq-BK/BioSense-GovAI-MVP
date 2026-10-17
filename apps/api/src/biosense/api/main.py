@@ -2,8 +2,9 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 import structlog
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from biosense.api.v1.router import api_v1_router
 from biosense.config import settings
@@ -21,6 +22,15 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     yield
     stop_scheduler()
     logger.info("biosense_api_stopping")
+
+
+def _cors_headers(request: Request) -> dict[str, str]:
+    # Responses from the ServerErrorMiddleware bypass CORSMiddleware, so the browser
+    # would otherwise report a CORS failure instead of the real 500.
+    origin = request.headers.get("origin")
+    if origin and origin in settings.cors_origin_list:
+        return {"access-control-allow-origin": origin, "access-control-allow-credentials": "true"}
+    return {}
 
 
 def create_app() -> FastAPI:
@@ -41,6 +51,20 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    @app.exception_handler(Exception)
+    async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        logger.exception(
+            "unhandled_exception",
+            method=request.method,
+            path=request.url.path,
+            error_type=type(exc).__name__,
+        )
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal server error"},
+            headers=_cors_headers(request),
+        )
 
     app.include_router(api_v1_router)
 

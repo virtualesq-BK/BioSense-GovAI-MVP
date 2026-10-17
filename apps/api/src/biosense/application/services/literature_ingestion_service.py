@@ -1,7 +1,4 @@
-import json
-import time
 import uuid
-from dataclasses import asdict
 from pathlib import Path
 
 import structlog
@@ -11,8 +8,6 @@ from biosense.application.services.chunking_service import ChunkingService
 from biosense.application.services.metric_extraction_service import MetricExtractionService
 from biosense.config import settings
 from biosense.domain.entities.literature import (
-    BiomarkerRecommendation,
-    Citation,
     ParsedPaper,
 )
 from biosense.infrastructure.ai.embedding_service import EmbeddingService

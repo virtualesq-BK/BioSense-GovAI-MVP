@@ -11,7 +11,10 @@ from biosense.domain.entities.molecular_recognition import (
     RecognitionStrategyType,
 )
 from biosense.domain.entities.priority_score import BiomarkerPriorityScore, ScoreComponent
-from biosense.domain.entities.sensor_transduction import SensorPlatformType, SensorTransductionCandidate
+from biosense.domain.entities.sensor_transduction import (
+    SensorPlatformType,
+    SensorTransductionCandidate,
+)
 
 
 def _component(score=60.0, missing=False):

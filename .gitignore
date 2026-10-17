@@ -1,9 +1,10 @@
 node_modules
 .output
+# SvelteKit build artefacts (legacy — active app is apps/web Next.js)
+.svelte-kit
 .vercel
 .netlify
 .wrangler
-/.svelte-kit
 /build
 
 # Next.js
@@ -41,3 +42,6 @@ vite.config.ts.timestamp-*
 # Docker
 postgres_data
 neo4j_data
+
+# TypeScript incremental build cache
+*.tsbuildinfo

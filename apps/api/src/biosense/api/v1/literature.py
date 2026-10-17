@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from biosense.api.dependencies import get_db_session
+from biosense.api.dependencies import get_db_session, rate_limit_expensive, require_admin
 from biosense.application.dto.literature import (
     BiomarkerRecommendationResponse,
     CitationResponse,
@@ -52,7 +52,11 @@ async def get_paper(
     return _paper_to_summary(paper)
 
 
-@router.post("/literature/papers/upload", response_model=PaperSummary)
+@router.post(
+    "/literature/papers/upload",
+    response_model=PaperSummary,
+    dependencies=[Depends(require_admin)],
+)
 async def upload_paper_pdf(
     file: UploadFile = File(...),
     external_id: str = Form(...),
@@ -80,7 +84,11 @@ async def upload_paper_pdf(
     return _paper_to_summary(paper)
 
 
-@router.post("/literature/papers/ingest-text", response_model=PaperSummary)
+@router.post(
+    "/literature/papers/ingest-text",
+    response_model=PaperSummary,
+    dependencies=[Depends(require_admin)],
+)
 async def ingest_paper_text(
     body: IngestTextRequest,
     session: AsyncSession = Depends(get_db_session),
@@ -99,7 +107,11 @@ async def ingest_paper_text(
     return _paper_to_summary(paper)
 
 
-@router.post("/literature/papers/{paper_id}/reingest", response_model=PaperSummary)
+@router.post(
+    "/literature/papers/{paper_id}/reingest",
+    response_model=PaperSummary,
+    dependencies=[Depends(require_admin)],
+)
 async def reingest_paper(
     paper_id: uuid.UUID,
     session: AsyncSession = Depends(get_db_session),
@@ -133,7 +145,11 @@ async def get_ingestion_status(
         )
 
 
-@router.post("/literature/rag/query", response_model=RagQueryResponse)
+@router.post(
+    "/literature/rag/query",
+    response_model=RagQueryResponse,
+    dependencies=[Depends(rate_limit_expensive)],
+)
 async def rag_query(
     body: RagQueryRequest,
     session: AsyncSession = Depends(get_db_session),
@@ -157,7 +173,11 @@ async def rag_query(
     )
 
 
-@router.post("/literature/rag/evaluate", response_model=RagEvaluateResponse)
+@router.post(
+    "/literature/rag/evaluate",
+    response_model=RagEvaluateResponse,
+    dependencies=[Depends(rate_limit_expensive)],
+)
 async def rag_evaluate(
     body: RagEvaluateRequest,
     session: AsyncSession = Depends(get_db_session),

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from biosense.api.dependencies import get_db_session
+from biosense.api.dependencies import get_db_session, require_admin
 from biosense.application.dto.ingestion import (
     CancerStatsResponse,
     HarvestLiteratureRequest,
@@ -25,7 +25,11 @@ from biosense.infrastructure.persistence.postgres.models import Cancer, PublicHe
 router = APIRouter(tags=["Ingestion", "Public Data"])
 
 
-@router.post("/ingestion/jobs/trigger", response_model=TriggerIngestionResponse)
+@router.post(
+    "/ingestion/jobs/trigger",
+    response_model=TriggerIngestionResponse,
+    dependencies=[Depends(require_admin)],
+)
 async def trigger_ingestion(
     body: TriggerIngestionRequest,
     session: AsyncSession = Depends(get_db_session),
@@ -43,7 +47,11 @@ async def trigger_ingestion(
     )
 
 
-@router.post("/ingestion/literature/harvest", response_model=HarvestLiteratureResponse)
+@router.post(
+    "/ingestion/literature/harvest",
+    response_model=HarvestLiteratureResponse,
+    dependencies=[Depends(require_admin)],
+)
 async def harvest_literature(
     body: HarvestLiteratureRequest | None = None,
     session: AsyncSession = Depends(get_db_session),
@@ -57,7 +65,11 @@ async def harvest_literature(
     return HarvestLiteratureResponse(**result)
 
 
-@router.get("/ingestion/jobs", response_model=list[IngestionJobResponse])
+@router.get(
+    "/ingestion/jobs",
+    response_model=list[IngestionJobResponse],
+    dependencies=[Depends(require_admin)],
+)
 async def list_ingestion_jobs(
     session: AsyncSession = Depends(get_db_session),
 ) -> list[IngestionJobResponse]:
@@ -66,7 +78,11 @@ async def list_ingestion_jobs(
     return [_job_to_response(j) for j in jobs]
 
 
-@router.get("/ingestion/jobs/{job_id}", response_model=IngestionJobResponse)
+@router.get(
+    "/ingestion/jobs/{job_id}",
+    response_model=IngestionJobResponse,
+    dependencies=[Depends(require_admin)],
+)
 async def get_ingestion_job(
     job_id: uuid.UUID,
     session: AsyncSession = Depends(get_db_session),
@@ -78,7 +94,11 @@ async def get_ingestion_job(
     return _job_to_response(job)
 
 
-@router.get("/ingestion/monitoring/status", response_model=MonitoringStatusResponse)
+@router.get(
+    "/ingestion/monitoring/status",
+    response_model=MonitoringStatusResponse,
+    dependencies=[Depends(require_admin)],
+)
 async def get_monitoring_status(
     session: AsyncSession = Depends(get_db_session),
 ) -> MonitoringStatusResponse:

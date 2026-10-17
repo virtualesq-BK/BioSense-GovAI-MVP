@@ -1,4 +1,5 @@
 import hashlib
+
 import structlog
 
 from biosense.config import settings

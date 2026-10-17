@@ -31,6 +31,8 @@ services:
         sync: false
       - key: SUPABASE_JWT_SECRET
         sync: false
+      - key: ADMIN_EMAILS
+        sync: false
       - key: KOSIS_API_KEY
         sync: false
       - key: KDCA_API_URL
@@ -51,3 +53,11 @@ services:
         value: "24"
       - key: INGESTION_RETRY_MAX_ATTEMPTS
         value: "3"
+      - key: LITERATURE_HARVEST_SCHEDULER_ENABLED
+        value: "true"
+      - key: LITERATURE_HARVEST_CRON_DAY_OF_WEEK
+        value: "sun"
+      - key: LITERATURE_HARVEST_CRON_HOUR
+        value: "2"
+      - key: LITERATURE_HARVEST_MAX_RESULTS_PER_QUERY
+        value: "50"

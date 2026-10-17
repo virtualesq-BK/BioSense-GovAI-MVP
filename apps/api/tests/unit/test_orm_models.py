@@ -1,8 +1,6 @@
-import pytest
 
-from biosense.infrastructure.persistence.postgres.base import Base
 from biosense.infrastructure.persistence.postgres import models  # noqa: F401
-
+from biosense.infrastructure.persistence.postgres.base import Base
 
 EXPECTED_TABLES = {
     "users",

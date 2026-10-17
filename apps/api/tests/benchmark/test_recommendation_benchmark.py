@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from biosense.application.services.recommendation_engine_service import RecommendationEngineService
-from biosense.domain.entities.recommendation import PublicHealthSnapshot, RecommendationInput, ScoredCandidate
+from biosense.domain.entities.recommendation import (
+    PublicHealthSnapshot,
+    RecommendationInput,
+    ScoredCandidate,
+)
 from tests.unit.test_weighted_ranker import _sample_candidate
 
 

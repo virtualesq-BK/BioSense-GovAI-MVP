@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     supabase_anon_key: str = ""
     supabase_service_role_key: str = ""
     supabase_jwt_secret: str = ""
+    # Comma-separated emails allowed to call admin endpoints. Empty = no admins (fail closed).
+    admin_emails: str = ""
+    # Per-user requests per minute on costly (LLM / external API) endpoints.
+    expensive_rate_limit_per_minute: int = 20
 
     openai_api_key: str = ""
     openai_api_url: str = ""
@@ -54,10 +58,18 @@ class Settings(BaseSettings):
     # Europe PMC — open-access REST API, no auth required
     europe_pmc_base_url: str = "https://www.ebi.ac.uk/europepmc/webservices/rest"
 
-    # Ingestion pipeline
+    # Ingestion pipeline — public data
     ingestion_scheduler_enabled: bool = True
     ingestion_cron_hour: int = 3
     ingestion_cache_ttl_hours: int = 24
+
+    # Ingestion pipeline — literature (PubMed auto-harvest)
+    literature_harvest_scheduler_enabled: bool = True
+    # Day-of-week (0=Mon … 6=Sun) and hour (UTC) to run the harvest cron.
+    literature_harvest_cron_day_of_week: str = "sun"
+    literature_harvest_cron_hour: int = 2
+    # Max PubMed results fetched per search query per run.
+    literature_harvest_max_results_per_query: int = 50
     ingestion_retry_max_attempts: int = 3
     ingestion_retry_base_delay_seconds: float = 1.0
     public_data_seed_path: str = "data/public_health/kr_cancer_stats.json"

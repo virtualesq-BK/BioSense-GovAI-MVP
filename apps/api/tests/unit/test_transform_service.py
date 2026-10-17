@@ -1,7 +1,5 @@
 from decimal import Decimal
 
-import pytest
-
 from biosense.application.services.transform_service import TransformService
 from biosense.domain.entities.public_health import RawCancerStatRecord
 

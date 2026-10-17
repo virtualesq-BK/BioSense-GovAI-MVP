@@ -1,6 +1,5 @@
 import uuid
 from datetime import UTC, datetime
-from pathlib import Path
 
 import structlog
 from sqlalchemy import delete, func, select, text

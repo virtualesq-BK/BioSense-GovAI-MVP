@@ -1,4 +1,3 @@
-import pytest
 
 from biosense.infrastructure.database import to_asyncpg_url
 

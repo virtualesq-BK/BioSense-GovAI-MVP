@@ -97,10 +97,14 @@ export default function RecommendationsPage() {
     }
   }, [form, t]);
 
-  function handleSaveReport() {
+  async function handleSaveReport() {
     if (!results.length) return;
-    const report = saveReport(form, results);
-    router.push(`/reports?id=${report.id}`);
+    try {
+      const report = await saveReport(form, results);
+      router.push(`/reports?id=${report.id}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to save report');
+    }
   }
 
   function handleExportPdf() {

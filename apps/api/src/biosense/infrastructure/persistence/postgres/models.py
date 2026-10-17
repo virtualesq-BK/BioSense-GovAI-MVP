@@ -33,6 +33,17 @@ class User(Base):
     biomarker_cases: Mapped[list["BiomarkerCase"]] = relationship(back_populates="user")
 
 
+class SavedReport(Base):
+    __tablename__ = "saved_reports"
+    __table_args__ = (Index("idx_saved_reports_owner_created", "auth_user_id", "created_at"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    auth_user_id: Mapped[str] = mapped_column(Text, nullable=False)
+    input: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    recommendations: Mapped[list] = mapped_column(JSONB, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
 class CtDNA(Base):
     __tablename__ = "ctdna"
 

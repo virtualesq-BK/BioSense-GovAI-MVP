@@ -17,7 +17,7 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { exportReportToPdf, exportTableToPdf } from '@/lib/pdf-export';
-import { deleteReport, getReport, listReports, type SavedReport } from '@/lib/reports-store';
+import { deleteReport, listReports, type SavedReport } from '@/lib/reports-store';
 import { formatPercent } from '@/lib/utils';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/i18n/language-provider';
@@ -29,23 +29,30 @@ function ReportsContent() {
   const [reports, setReports] = useState<SavedReport[]>([]);
   const [selected, setSelected] = useState<SavedReport | null>(null);
 
-  const refresh = useCallback(() => {
-    const all = listReports();
-    setReports(all);
-    if (selectedId) {
-      setSelected(getReport(selectedId) ?? all[0] ?? null);
-    } else {
-      setSelected(all[0] ?? null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      const all = await listReports();
+      setLoadError(null);
+      setReports(all);
+      setSelected((selectedId && all.find((r) => r.id === selectedId)) || all[0] || null);
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : 'Failed to load reports');
     }
   }, [selectedId]);
 
   useEffect(() => {
-    refresh();
+    void refresh();
   }, [refresh]);
 
-  function handleDelete(id: string) {
-    deleteReport(id);
-    refresh();
+  async function handleDelete(id: string) {
+    try {
+      await deleteReport(id);
+      await refresh();
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : 'Failed to delete report');
+    }
   }
 
   function handleExportSelected() {
@@ -101,6 +108,9 @@ function ReportsContent() {
         </>
       }
     >
+      {loadError && (
+        <p className="mb-4 text-sm text-red-600 dark:text-red-400">{loadError}</p>
+      )}
       {reports.length === 0 ? (
         <Card>
           <CardContent className="flex min-h-[320px] flex-col items-center justify-center text-center">

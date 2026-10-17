@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from biosense.api.dependencies import get_db_session
+from biosense.api.dependencies import get_db_session, rate_limit_expensive
 from biosense.application.dto.rnd_report import (
     DetectabilityResponse,
     MolecularCharacterizationResponse,
@@ -24,7 +24,11 @@ from biosense.domain.entities.sensor_transduction import SensorTransductionCandi
 router = APIRouter(prefix="/rnd", tags=["R&D Design"])
 
 
-@router.post("/design", response_model=RndDesignReportResponse)
+@router.post(
+    "/design",
+    response_model=RndDesignReportResponse,
+    dependencies=[Depends(rate_limit_expensive)],
+)
 async def design_report(
     body: RndDesignRequest,
     session: AsyncSession = Depends(get_db_session),

@@ -1,4 +1,9 @@
-import type { GenerateRecommendationRequest, SensorRecommendation } from '@/lib/api-client';
+import {
+  reportsApi,
+  type GenerateRecommendationRequest,
+  type SensorRecommendation,
+  type ServerReport
+} from '@/lib/api-client';
 
 export type SavedReport = {
   id: string;
@@ -7,39 +12,54 @@ export type SavedReport = {
   recommendations: SensorRecommendation[];
 };
 
-const STORAGE_KEY = 'biosense-reports';
+const LEGACY_STORAGE_KEY = 'biosense-reports';
 
-export function listReports(): SavedReport[] {
+function fromServer(r: ServerReport): SavedReport {
+  return {
+    id: r.id,
+    createdAt: r.created_at,
+    input: r.input,
+    recommendations: r.recommendations
+  };
+}
+
+function readLegacyReports(): SavedReport[] {
   if (typeof window === 'undefined') return [];
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(LEGACY_STORAGE_KEY);
     return raw ? (JSON.parse(raw) as SavedReport[]) : [];
   } catch {
     return [];
   }
 }
 
-export function saveReport(
+/** One-time upload of reports saved in this browser before server storage existed. */
+async function migrateLegacyReports(): Promise<void> {
+  const legacy = readLegacyReports();
+  if (!legacy.length) return;
+  try {
+    // Oldest first so the server's created_at ordering keeps their relative order.
+    for (const r of [...legacy].reverse()) {
+      await reportsApi.create(r.input, r.recommendations);
+    }
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
+  } catch {
+    // Keep local copies; migration is retried on the next visit.
+  }
+}
+
+export async function listReports(): Promise<SavedReport[]> {
+  await migrateLegacyReports();
+  return (await reportsApi.list()).map(fromServer);
+}
+
+export async function saveReport(
   input: GenerateRecommendationRequest,
   recommendations: SensorRecommendation[]
-): SavedReport {
-  const report: SavedReport = {
-    id: crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-    input,
-    recommendations
-  };
-  const existing = listReports();
-  const next = [report, ...existing].slice(0, 50);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  return report;
+): Promise<SavedReport> {
+  return fromServer(await reportsApi.create(input, recommendations));
 }
 
-export function deleteReport(id: string) {
-  const next = listReports().filter((r) => r.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-}
-
-export function getReport(id: string): SavedReport | undefined {
-  return listReports().find((r) => r.id === id);
+export async function deleteReport(id: string): Promise<void> {
+  await reportsApi.remove(id);
 }

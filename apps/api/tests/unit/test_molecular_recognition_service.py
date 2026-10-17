@@ -1,11 +1,11 @@
 from types import SimpleNamespace
 
 from biosense.application.services.molecular_recognition_service import MolecularRecognitionEngine
+from biosense.domain.entities.biomarker_dimension import EvidenceRef
 from biosense.domain.entities.molecular_characterization import (
     Detectability,
     MolecularCharacterizationResult,
 )
-from biosense.domain.entities.biomarker_dimension import EvidenceRef
 from biosense.domain.entities.molecular_recognition import RecognitionStrategyType
 
 
