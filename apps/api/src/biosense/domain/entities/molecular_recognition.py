@@ -9,10 +9,10 @@ recommendation rather than a guessed score.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 
-class RecognitionStrategyType(str, Enum):
+class RecognitionStrategyType(StrEnum):
     DNA_HYBRIDIZATION = "dna_hybridization"
     CRISPR_CAS = "crispr_cas"
     APTAMER = "aptamer_based"

@@ -1,14 +1,14 @@
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
 
-class DependencyStatus(str, Enum):
+class DependencyStatus(StrEnum):
     OK = "ok"
     DOWN = "down"
 
 
-class HealthStatus(str, Enum):
+class HealthStatus(StrEnum):
     OK = "ok"
     DEGRADED = "degraded"
     DOWN = "down"

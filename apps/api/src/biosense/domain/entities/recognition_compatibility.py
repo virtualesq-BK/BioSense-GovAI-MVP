@@ -9,17 +9,18 @@ compatibility claim as more certain than it is.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 from biosense.domain.entities.biomarker_dimension import BiomarkerDimensionType
 from biosense.domain.entities.molecular_recognition import RecognitionStrategyType
 
 
-class CompatibilityEvidenceLevel(str, Enum):
+class CompatibilityEvidenceLevel(StrEnum):
     ESTABLISHED = "established"  # widely documented in literature/standards
     EMERGING = "emerging"  # documented but less mature / fewer sources
     THEORETICAL = "theoretical"  # plausible by mechanism, not yet broadly documented
-    INSUFFICIENT_EVIDENCE = "insufficient_evidence"  # no real literature evidence found/checked for this pairing during platform development — honestly unresolved, not a guessed rationale
+    INSUFFICIENT_EVIDENCE = "insufficient_evidence"  # no real literature evidence found/checked for this pairing
+    # during platform development — honestly unresolved, not a guessed rationale
 
 
 @dataclass(frozen=True)

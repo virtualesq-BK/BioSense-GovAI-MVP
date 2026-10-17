@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 
-class SensorPlatformType(str, Enum):
+class SensorPlatformType(StrEnum):
     ELECTROCHEMICAL = "electrochemical"
     OPTICAL = "optical"
     SERS = "sers"

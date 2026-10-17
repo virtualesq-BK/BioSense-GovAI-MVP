@@ -91,7 +91,7 @@ async def test_recommendation_benchmark_hit_rate() -> None:
     hits = 0
 
     for case in cases:
-        inp_data = case["input"]
+        _inp_data = case["input"]
         expected_sensors = case["expected_sensor_types"]
         expected_rec = case["expected_recognition"]
 

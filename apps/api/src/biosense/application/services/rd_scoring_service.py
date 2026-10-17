@@ -120,7 +120,11 @@ class RdScoringService:
 
     def _molecular_fit_factor(self, c: MolecularCharacterizationResult) -> RdScoreFactor:
         if not c.molecular_characteristics:
-            return RdScoreFactor(score=0.0, basis="Insufficient evidence: no molecular characteristics derived.", missing_data=True)
+            return RdScoreFactor(
+                score=0.0,
+                basis="Insufficient evidence: no molecular characteristics derived.",
+                missing_data=True,
+            )
         detectable = c.detectability.is_detectable_in_ctdna if c.detectability else None
         score = min(100.0, 40.0 * len(c.molecular_characteristics) + (30.0 if detectable else 0.0))
         return RdScoreFactor(
@@ -133,7 +137,11 @@ class RdScoringService:
 
     def _recognition_factor(self, r: RecognitionRecommendation | None) -> RdScoreFactor:
         if r is None or r.status != "scored" or r.compatibility_score is None:
-            return RdScoreFactor(score=0.0, basis="Insufficient evidence: no scored recognition strategy.", missing_data=True)
+            return RdScoreFactor(
+                score=0.0,
+                basis="Insufficient evidence: no scored recognition strategy.",
+                missing_data=True,
+            )
         return RdScoreFactor(
             score=r.compatibility_score,
             basis=f"Recognition compatibility_score from {r.strategy.value} ({r.status}).",
@@ -141,7 +149,11 @@ class RdScoringService:
 
     def _sensor_factor(self, s: SensorTransductionCandidate | None) -> RdScoreFactor:
         if s is None or s.status != "scored" or s.feasibility_score is None:
-            return RdScoreFactor(score=0.0, basis="Insufficient evidence: no scored sensor candidate.", missing_data=True)
+            return RdScoreFactor(
+                score=0.0,
+                basis="Insufficient evidence: no scored sensor candidate.",
+                missing_data=True,
+            )
         return RdScoreFactor(
             score=s.feasibility_score,
             basis=f"Sensor feasibility_score for {s.platform.value} platform ({s.sensor_name}).",
@@ -152,11 +164,18 @@ class RdScoringService:
         if n == 0:
             return RdScoreFactor(score=0.0, basis="Insufficient evidence: no linked citations.", missing_data=True)
         score = min(100.0, 25.0 * n)
-        return RdScoreFactor(score=round(score, 2), basis=f"25 pts per linked evidence record ({n} found), capped at 100.")
+        return RdScoreFactor(
+            score=round(score, 2),
+            basis=f"25 pts per linked evidence record ({n} found), capped at 100.",
+        )
 
     def _clinical_relevance_factor(self, p: BiomarkerPriorityScore | None) -> RdScoreFactor:
         if p is None:
-            return RdScoreFactor(score=0.0, basis="Insufficient evidence: no BiomarkerPriorityScore available.", missing_data=True)
+            return RdScoreFactor(
+                score=0.0,
+                basis="Insufficient evidence: no BiomarkerPriorityScore available.",
+                missing_data=True,
+            )
         c = p.clinical_evidence
         return RdScoreFactor(
             score=c.score,
@@ -166,7 +185,11 @@ class RdScoringService:
 
     def _data_confidence_factor(self, p: BiomarkerPriorityScore | None) -> RdScoreFactor:
         if p is None:
-            return RdScoreFactor(score=0.0, basis="Insufficient evidence: no BiomarkerPriorityScore available.", missing_data=True)
+            return RdScoreFactor(
+                score=0.0,
+                basis="Insufficient evidence: no BiomarkerPriorityScore available.",
+                missing_data=True,
+            )
         c = p.data_confidence
         return RdScoreFactor(
             score=c.score,

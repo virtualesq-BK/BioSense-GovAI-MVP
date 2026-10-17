@@ -12,10 +12,10 @@ become a node with SYNONYM_OF edges.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class OntologyEntityType(str, Enum):
+class OntologyEntityType(StrEnum):
     CANCER = "cancer"
     GENE = "gene"
     MUTATION = "mutation"

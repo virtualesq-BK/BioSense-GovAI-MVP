@@ -13,10 +13,10 @@ rewrite, but they are not populated here.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 
-class BiomarkerDimensionType(str, Enum):
+class BiomarkerDimensionType(StrEnum):
     """The multi-omics dimensions a biomarker candidate can belong to.
 
     Only MUTATION is implemented in Phase 1. The rest are real, documented
@@ -36,7 +36,7 @@ class BiomarkerDimensionType(str, Enum):
         return self is BiomarkerDimensionType.MUTATION
 
 
-class BiomarkerEvidenceStatus(str, Enum):
+class BiomarkerEvidenceStatus(StrEnum):
     """How well-supported a characterization/recognition/scoring claim is,
     stated explicitly rather than left implicit in a bare number.
 
@@ -52,7 +52,7 @@ class BiomarkerEvidenceStatus(str, Enum):
     PLANNED = "planned"  # dimension/strategy not yet implemented in this platform
 
 
-class EvidenceHierarchyLevel(str, Enum):
+class EvidenceHierarchyLevel(StrEnum):
     """Lightweight INTERNAL evidence-strength ranking (Phase 2, Step 10).
 
     This is an internal ranking framework used only to help this platform's
