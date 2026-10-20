@@ -11,9 +11,16 @@ async function authHeaders(): Promise<Record<string, string>> {
   if (typeof window === 'undefined') return {};
   const { createClient } = await import('@/lib/supabase/client');
   const supabase = createClient();
-  const {
-    data: { session }
-  } = await supabase.auth.getSession();
+
+  let { data: { session } } = await supabase.auth.getSession();
+
+  // Refresh proactively if the token is missing or expires within 60 seconds.
+  const expiresAt = session?.expires_at ?? 0;
+  if (!session?.access_token || expiresAt - Math.floor(Date.now() / 1000) < 60) {
+    const { data } = await supabase.auth.refreshSession();
+    session = data.session;
+  }
+
   if (!session?.access_token) return {};
   return { Authorization: `Bearer ${session.access_token}` };
 }

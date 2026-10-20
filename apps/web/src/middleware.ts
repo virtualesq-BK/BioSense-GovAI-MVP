@@ -10,6 +10,7 @@ export const config = {
     '/dashboard/:path*',
     '/recommendations/:path*',
     '/reports/:path*',
+    '/rnd-design/:path*',
     '/admin/:path*',
     '/sign-in',
     '/sign-up'
