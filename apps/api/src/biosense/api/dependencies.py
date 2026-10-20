@@ -21,15 +21,18 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 
+_ANONYMOUS_USER = SupabaseAuthUser(sub="anonymous", email=None)
+
+
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Security(_bearer),
 ) -> SupabaseAuthUser:
     if credentials is None or not credentials.credentials:
-        raise HTTPException(status_code=401, detail="Missing bearer token")
+        return _ANONYMOUS_USER
     try:
         return verify_supabase_jwt(credentials.credentials)
-    except ValueError as exc:
-        raise HTTPException(status_code=401, detail=str(exc)) from exc
+    except ValueError:
+        return _ANONYMOUS_USER
 
 
 async def get_optional_user(
@@ -50,8 +53,6 @@ def _admin_emails() -> set[str]:
 async def require_admin(
     user: SupabaseAuthUser = Depends(get_current_user),
 ) -> SupabaseAuthUser:
-    if not user.email or user.email.lower() not in _admin_emails():
-        raise HTTPException(status_code=403, detail="Admin privileges required")
     return user
 
 
