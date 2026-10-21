@@ -1,16 +1,33 @@
 import { cn } from '@/lib/utils';
 import { type LucideIcon } from 'lucide-react';
 
+type StatCardVariant = 'default' | 'success' | 'warning' | 'danger';
+
 type StatCardProps = {
   title: string;
   value: string | number;
   description?: string;
   icon?: LucideIcon;
   trend?: { value: string; positive?: boolean };
+  variant?: StatCardVariant;
   className?: string;
 };
 
-export function StatCard({ title, value, description, icon: Icon, trend, className }: StatCardProps) {
+const iconVariantBg: Record<StatCardVariant, string> = {
+  default: 'bg-(--muted)',
+  success: 'bg-emerald-100 dark:bg-emerald-900/30',
+  warning: 'bg-amber-100 dark:bg-amber-900/30',
+  danger: 'bg-red-100 dark:bg-red-900/30'
+};
+
+const iconVariantColor: Record<StatCardVariant, string> = {
+  default: 'text-(--accent)',
+  success: 'text-emerald-600 dark:text-emerald-400',
+  warning: 'text-amber-600 dark:text-amber-400',
+  danger: 'text-red-600 dark:text-red-400'
+};
+
+export function StatCard({ title, value, description, icon: Icon, trend, variant = 'default', className }: StatCardProps) {
   return (
     <div
       className={cn(
@@ -27,8 +44,8 @@ export function StatCard({ title, value, description, icon: Icon, trend, classNa
           )}
         </div>
         {Icon && (
-          <div className="rounded-lg bg-[var(--muted)] p-2.5">
-            <Icon className="h-5 w-5 text-[var(--accent)]" />
+          <div className={cn('rounded-lg p-2.5', iconVariantBg[variant])}>
+            <Icon className={cn('h-5 w-5', iconVariantColor[variant])} />
           </div>
         )}
       </div>

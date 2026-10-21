@@ -6,7 +6,11 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'BioSense-GovAI',
   description:
-    'AI-powered biomarker–biosensor co-design platform for early cancer detection'
+    'AI-powered biomarker–biosensor co-design platform for early cancer detection',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg'
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

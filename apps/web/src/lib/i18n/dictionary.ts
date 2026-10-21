@@ -50,6 +50,8 @@ export const dictionary = {
   },
   'dashboard.stat.apiStatus': { ko: 'API 상태', en: 'API Status' },
   'dashboard.stat.ok': { ko: '정상', en: 'Healthy' },
+  'dashboard.stat.degraded': { ko: '부분 장애', en: 'Degraded' },
+  'dashboard.stat.down': { ko: '오프라인', en: 'Offline' },
   'dashboard.stat.needsAttention': { ko: '점검 필요', en: 'Needs attention' },
   'dashboard.stat.ingestionJobs': { ko: '수집 작업', en: 'Ingestion Jobs' },
   'dashboard.stat.completed': { ko: '완료', en: 'Completed' },

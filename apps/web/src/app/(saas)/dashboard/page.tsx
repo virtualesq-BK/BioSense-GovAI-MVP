@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
+  AlertTriangle,
   BookOpen,
   CheckCircle2,
   Database,
@@ -161,9 +162,30 @@ export default function DashboardPage() {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard
               title={t('dashboard.stat.apiStatus')}
-              value={health?.status === 'ok' ? t('dashboard.stat.ok') : t('dashboard.stat.needsAttention')}
+              value={
+                health?.status === 'ok'
+                  ? t('dashboard.stat.ok')
+                  : health?.status === 'degraded'
+                    ? t('dashboard.stat.degraded')
+                    : health?.status === 'down'
+                      ? t('dashboard.stat.down')
+                      : t('dashboard.stat.needsAttention')
+              }
               description={`v${health?.version ?? '—'}`}
-              icon={health?.status === 'ok' ? CheckCircle2 : XCircle}
+              icon={
+                health?.status === 'ok'
+                  ? CheckCircle2
+                  : health?.status === 'degraded'
+                    ? AlertTriangle
+                    : XCircle
+              }
+              variant={
+                health?.status === 'ok'
+                  ? 'success'
+                  : health?.status === 'degraded'
+                    ? 'warning'
+                    : 'danger'
+              }
             />
             <StatCard
               title={t('dashboard.stat.ingestionJobs')}
