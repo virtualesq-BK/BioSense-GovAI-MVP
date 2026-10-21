@@ -84,6 +84,7 @@ export const dictionary = {
   'dashboard.table.createdAt': { ko: '생성일', en: 'Created' },
   'dashboard.dependency.connected': { ko: '연결됨', en: 'Connected' },
   'dashboard.dependency.offline': { ko: '오프라인', en: 'Offline' },
+  'dashboard.dependency.optional': { ko: '선택적 기능 비활성', en: 'Optional feature offline' },
   'dashboard.day.mon': { ko: '월', en: 'Mon' },
   'dashboard.day.tue': { ko: '화', en: 'Tue' },
   'dashboard.day.wed': { ko: '수', en: 'Wed' },

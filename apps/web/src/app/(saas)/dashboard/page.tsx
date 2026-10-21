@@ -265,20 +265,31 @@ export default function DashboardPage() {
             <DependencyCard
               name="Supabase (Postgres)"
               status={health?.dependencies.postgres ?? 'down'}
+              required
             />
-            <DependencyCard name="Neo4j" status={health?.dependencies.neo4j ?? 'down'} />
+            <DependencyCard
+              name="Neo4j (지식 그래프)"
+              status={health?.dependencies.neo4j ?? 'down'}
+            />
           </div>
         </>
       )}
     </PageLayout>
   );
 
-  function DependencyCard({ name, status }: { name: string; status: string }) {
+  function DependencyCard({ name, status, required = false }: { name: string; status: string; required?: boolean }) {
     const ok = status === 'ok';
     return (
-      <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
-        <span className="font-medium">{name}</span>
-        <Badge variant={ok ? 'success' : 'destructive'}>
+      <div className="flex items-center justify-between rounded-xl border border-(--border) bg-(--card) p-4">
+        <div>
+          <span className="font-medium">{name}</span>
+          {!ok && !required && (
+            <p className="text-xs text-(--muted-foreground) mt-0.5">
+              {t('dashboard.dependency.optional')}
+            </p>
+          )}
+        </div>
+        <Badge variant={ok ? 'success' : required ? 'destructive' : 'warning'}>
           {ok ? t('dashboard.dependency.connected') : t('dashboard.dependency.offline')}
         </Badge>
       </div>

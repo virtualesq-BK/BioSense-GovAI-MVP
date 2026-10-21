@@ -41,11 +41,13 @@ async def get_health() -> HealthResponse:
     postgres, neo4j = await asyncio.gather(_check_postgres(), _check_neo4j())
     deps = DependenciesHealth(postgres=postgres, neo4j=neo4j)
 
-    if postgres == DependencyStatus.OK and neo4j == DependencyStatus.OK:
+    # Postgres is the primary (required) dependency.
+    # Neo4j powers the knowledge-graph feature but is treated as optional:
+    # its absence degrades graph-based recommendations but does not take
+    # the whole platform offline.
+    if postgres == DependencyStatus.OK:
         status = HealthStatus.OK
-    elif postgres == DependencyStatus.DOWN and neo4j == DependencyStatus.DOWN:
-        status = HealthStatus.DOWN
     else:
-        status = HealthStatus.DEGRADED
+        status = HealthStatus.DOWN
 
     return HealthResponse(status=status, dependencies=deps)
